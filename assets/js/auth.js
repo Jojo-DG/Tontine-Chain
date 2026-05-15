@@ -2,25 +2,37 @@ let accessToken = localStorage.getItem('tontine_access_token');
 let refreshToken = localStorage.getItem('tontine_refresh_token');
 let currentUser = JSON.parse(localStorage.getItem('tontine_user') || 'null');
 
+async function handleResponse(res) {
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    let msg = data.message || 'Erreur inattendue';
+    if (Array.isArray(msg)) msg = msg[0];
+    throw { code: data.error || 'API_ERROR', message: msg };
+  }
+  return data;
+}
+
 async function login(phone, password) {
   const res = await fetch(`${CONFIG.API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phone, password })
   });
-  const data = await res.json();
-  if (!data.success) throw { code: data.error.code, message: data.error.message };
+  const data = await handleResponse(res);
   
-  accessToken = data.data.access_token;
-  refreshToken = data.data.refresh_token;
-  currentUser = data.data.user;
+  // Adapté si l'API retourne directement les tokens ou enveloppé dans data
+  const payload = data.data || data;
+  
+  accessToken = payload.access_token;
+  refreshToken = payload.refresh_token;
+  currentUser = payload.user;
   
   localStorage.setItem('tontine_access_token', accessToken);
   localStorage.setItem('tontine_refresh_token', refreshToken);
   localStorage.setItem('tontine_user', JSON.stringify(currentUser));
   
-  document.querySelector('meta[name="user-role"]')?.setAttribute('content', currentUser.role);
-  return data.data;
+  document.querySelector('meta[name="user-role"]')?.setAttribute('content', currentUser?.role || 'USER');
+  return payload;
 }
 
 async function verifyOtp(phone, otp) {
@@ -29,9 +41,8 @@ async function verifyOtp(phone, otp) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phone, otp })
   });
-  const data = await res.json();
-  if (!data.success) throw { code: data.error.code, message: data.error.message };
-  return data.data;
+  const data = await handleResponse(res);
+  return data.data || data;
 }
 
 async function refreshAccessToken() {
@@ -41,16 +52,16 @@ async function refreshAccessToken() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refresh_token: refreshToken })
   });
-  const data = await res.json();
-  if (!data.success) throw { code: data.error.code, message: data.error.message };
+  const data = await handleResponse(res);
+  const payload = data.data || data;
   
-  accessToken = data.data.access_token;
-  refreshToken = data.data.refresh_token;
+  accessToken = payload.access_token;
+  refreshToken = payload.refresh_token;
   
   localStorage.setItem('tontine_access_token', accessToken);
   localStorage.setItem('tontine_refresh_token', refreshToken);
   
-  return data.data;
+  return payload;
 }
 
 async function logout() {

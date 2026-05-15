@@ -114,9 +114,12 @@
       }
 
       try {
+        // Sauvegarder le rôle pour plus tard (si besoin côté client)
+        sessionStorage.setItem('tontine_pending_role', selectedRole);
+
         const data = await apiFetch('/auth/register', {
           method: 'POST',
-          body: JSON.stringify({ phone, password, full_name, role: selectedRole })
+          body: JSON.stringify({ phone, password, full_name })
         });
         hideSpinner(btn, 'Créer mon compte');
         // Stocker le téléphone pour verify-otp
