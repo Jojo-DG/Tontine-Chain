@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inscription — Tontine Chain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+  <div class="max-w-lg w-full">
+    <!-- Step indicator -->
+    <div id="step-indicator" class="flex justify-center mb-8">
+      <div class="flex items-center gap-2 text-sm font-medium">
+        <span id="step1-dot" class="w-8 h-8 rounded-full flex items-center justify-center bg-[--accent] text-white">1</span>
+        <span class="text-gray-400">—</span>
+        <span id="step2-dot" class="w-8 h-8 rounded-full flex items-center justify-center border border-gray-300 text-gray-500">2</span>
+      </div>
+    </div>
+
+    <!-- Step 1: Role selection -->
+    <div id="step1" class="card bg-white rounded-xl shadow p-8">
+      <h1 class="text-2xl font-bold text-center mb-6">Quel est votre profil ?</h1>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="border-2 border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-[--accent] transition" id="role-member">
+          <i data-lucide="users" class="w-10 h-10 text-[--accent] mx-auto mb-2"></i>
+          <strong class="block">Membre</strong>
+          <span class="text-sm text-gray-500">Je veux rejoindre une tontine</span>
+        </div>
+        <div class="border-2 border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-[--accent] transition" id="role-organizer">
+          <i data-lucide="crown" class="w-10 h-10 text-[--accent] mx-auto mb-2"></i>
+          <strong class="block">Organisateur</strong>
+          <span class="text-sm text-gray-500">Je veux créer et gérer ma tontine</span>
+        </div>
+      </div>
+      <p class="text-center text-sm text-gray-500 mt-6">Vous pourrez changer de rôle plus tard.</p>
+    </div>
+
+    <!-- Step 2: Registration form -->
+    <div id="step2" class="card bg-white rounded-xl shadow p-8 hidden">
+      <h1 class="text-2xl font-bold text-center mb-6">Créer un compte</h1>
+      <form id="register-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Nom complet</label>
+          <input type="text" id="full_name" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[--accent] outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Téléphone</label>
+          <input type="tel" id="phone" placeholder="+229 XX XX XX XX" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[--accent] outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Mot de passe</label>
+          <input type="password" id="password" required minlength="8" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[--accent] outline-none">
+          <p class="text-xs text-gray-500 mt-1">8 caractères min, 1 majuscule, 1 chiffre, 1 spécial</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Confirmer le mot de passe</label>
+          <input type="password" id="confirm_password" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[--accent] outline-none">
+        </div>
+        <button type="submit" id="register-btn" class="btn-primary w-full py-2.5">Créer mon compte</button>
+      </form>
+      <p class="text-center text-sm mt-4">Déjà un compte ? <a href="connexion.html" class="text-[--accent] font-medium">Se connecter</a></p>
+    </div>
+  </div>
+
+  <script>
+    let selectedRole = null;
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step1Dot = document.getElementById('step1-dot');
+    const step2Dot = document.getElementById('step2-dot');
+
+    document.getElementById('role-member').addEventListener('click', () => { selectedRole = 'USER'; showStep2(); });
+    document.getElementById('role-organizer').addEventListener('click', () => { selectedRole = 'ORGANIZER'; showStep2(); });
+
+    function showStep2() {
+      step1.classList.add('hidden');
+      step2.classList.remove('hidden');
+      step1Dot.className = 'w-8 h-8 rounded-full flex items-center justify-center border border-gray-300 text-gray-500';
+      step2Dot.className = 'w-8 h-8 rounded-full flex items-center justify-center bg-[--accent] text-white';
+    }
+
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('register-btn');
+      showSpinner(btn);
+
+      const full_name = document.getElementById('full_name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm_password').value;
+
+      // Validation basique
+      if (!full_name || !phone || !password || !confirm) {
+        hideSpinner(btn, 'Créer mon compte');
+        showBanner(step2, 'Tous les champs sont requis.', 'warning');
+        return;
+      }
+      if (password !== confirm) {
+        hideSpinner(btn, 'Créer mon compte');
+        showBanner(step2, 'Les mots de passe ne correspondent pas.', 'error');
+        return;
+      }
+      if (!/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
+        hideSpinner(btn, 'Créer mon compte');
+        showBanner(step2, 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial.', 'error');
+        return;
+      }
+
+      try {
+        const data = await apiFetch('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ phone, password, full_name, role: selectedRole })
+        });
+        hideSpinner(btn, 'Créer mon compte');
+        // Stocker le téléphone pour verify-otp
+        sessionStorage.setItem('registration_phone', phone);
+        window.location.href = 'verify-otp.html';
+      } catch (err) {
+        hideSpinner(btn, 'Créer mon compte');
+        if (err.code === 'VALIDATION_ERROR') showBanner(step2, 'Vérifiez les champs du formulaire.', 'error');
+        else if (err.code === 'PHONE_ALREADY_EXISTS') {
+          showBanner(step2, 'Ce numéro est déjà enregistré. <a href="connexion.html" class="underline font-medium">Se connecter</a>', 'error');
+        } else showBanner(step2, err.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

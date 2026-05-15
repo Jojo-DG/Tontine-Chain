@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="user-role" content="">
+  <title>Détail tontine — Tontine Chain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/blockchain.js"></script>
+  <script src="assets/js/layout.js"></script>
+</head>
+<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-6xl mx-auto">
+    <div id="loading" class="grid grid-cols-4 gap-4 mb-6">
+      <div class="skeleton h-24 rounded-xl"></div>
+      <div class="skeleton h-24 rounded-xl"></div>
+      <div class="skeleton h-24 rounded-xl"></div>
+      <div class="skeleton h-24 rounded-xl"></div>
+    </div>
+
+    <div id="content" class="hidden space-y-6">
+      <!-- KPI cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="kpi-grid"></div>
+
+      <!-- Barre progression -->
+      <div class="bg-white rounded-xl p-6">
+        <h3 class="font-semibold mb-3">Progression des cotisations</h3>
+        <div class="bg-gray-200 rounded-full h-3"><div id="progress-bar" class="bg-[--accent] h-3 rounded-full" style="width:0%"></div></div>
+        <p class="text-sm text-gray-600 mt-2"><span id="progress-text">0/0</span> membres ont payé</p>
+      </div>
+
+      <!-- Bénéficiaire -->
+      <div class="bg-white rounded-xl p-6 flex items-center gap-3">
+        <i data-lucide="crown" class="w-6 h-6 text-yellow-500"></i>
+        <span class="text-lg font-semibold" id="beneficiary-name">—</span>
+        <span class="badge badge-info">Bénéficiaire actuel</span>
+      </div>
+
+      <!-- Membres -->
+      <div class="bg-white rounded-xl p-6 overflow-x-auto">
+        <h3 class="font-semibold mb-4">Membres</h3>
+        <table class="w-full text-sm">
+          <thead><tr class="text-left text-gray-500"><th>Ordre</th><th>Nom</th><th>Score</th><th>Rôle</th><th>Statut</th><th>Action</th></tr></thead>
+          <tbody id="members-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Historique cycles -->
+      <div class="bg-white rounded-xl p-6 overflow-x-auto">
+        <h3 class="font-semibold mb-4">Historique des cycles</h3>
+        <table class="w-full text-sm">
+          <thead><tr class="text-left text-gray-500"><th>Cycle</th><th>Bénéficiaire</th><th>Montant distribué</th><th>Date</th><th>Statut</th><th></th></tr></thead>
+          <tbody id="cycles-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Preuve blockchain -->
+      <div id="blockchain-proof" class="bg-white rounded-xl p-6 hidden">
+        <h3 class="font-semibold mb-2">Preuve blockchain</h3>
+        <button id="verify-onchain-btn" class="btn-outline">Vérifier on-chain</button>
+        <div id="onchain-result" class="mt-3 hidden"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const tontineId = urlParams.get('id');
+    if (!tontineId) window.location.href = 'dashboard-membre.html';
+
+    (async () => {
+      try {
+        const [tontineRes, cyclesRes, membersRes] = await Promise.all([
+          apiFetch(`/tontines/${tontineId}`),
+          apiFetch(`/tontines/${tontineId}/cycles`),
+          apiFetch(`/tontines/${tontineId}/members`)
+        ]);
+        const t = tontineRes.data;
+        renderKPI(t);
+        renderProgress(t);
+        renderBeneficiary(t);
+        renderMembers(membersRes.data, t);
+        renderCycles(cyclesRes.data);
+        if (t.contract_address) {
+          document.getElementById('blockchain-proof').classList.remove('hidden');
+          window.contractAddress = t.contract_address;
+          window.contractAbi = t.abi; // suppose que l'API renvoie l'ABI
+        }
+        document.getElementById('loading').remove();
+        document.getElementById('content').classList.remove('hidden');
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    })();
+
+    function renderKPI(t) {
+      document.getElementById('kpi-grid').innerHTML = `
+        <div class="bg-white rounded-xl p-4"><i data-lucide="coins" class="w-6 h-6 text-[--accent] mb-2"></i><div class="text-xl font-bold">${formatMontant(t.current_cycle?.total_collected)}</div><div class="text-sm text-gray-500">Cagnotte</div></div>
+        <div class="bg-white rounded-xl p-4"><i data-lucide="calendar" class="w-6 h-6 text-[--accent] mb-2"></i><div class="text-xl font-bold">${countdown(t.current_cycle?.deadline)}</div><div class="text-sm text-gray-500">Échéance</div></div>
+        <div class="bg-white rounded-xl p-4"><i data-lucide="clock" class="w-6 h-6 text-[--accent] mb-2"></i><div class="text-xl font-bold">${formatDate(t.current_cycle?.deadline)}</div><div class="text-sm text-gray-500">Date limite</div></div>
+        <div class="bg-white rounded-xl p-4"><i data-lucide="users" class="w-6 h-6 text-[--accent] mb-2"></i><div class="text-xl font-bold">${t.contributions_confirmed || 0}/${t.contributions_total || 0}</div><div class="text-sm text-gray-500">Cotisations</div></div>
+      `;
+      lucide.createIcons();
+    }
+
+    function renderProgress(t) {
+      const pct = t.contributions_total ? (t.contributions_confirmed/t.contributions_total*100) : 0;
+      document.getElementById('progress-bar').style.width = pct + '%';
+      document.getElementById('progress-text').textContent = `${t.contributions_confirmed || 0}/${t.contributions_total || 0}`;
+    }
+
+    function renderBeneficiary(t) {
+      document.getElementById('beneficiary-name').textContent = t.current_cycle?.beneficiary?.full_name || '—';
+    }
+
+    function renderMembers(members, tontine) {
+      const tbody = document.getElementById('members-tbody');
+      tbody.innerHTML = members.map(m => `
+        <tr class="border-t">
+          <td class="py-2">${m.order || '—'}</td>
+          <td>${escapeHtml(m.user?.full_name)}</td>
+          <td><span class="badge ${scoreClass(m.user?.score_level)}">${m.user?.score_level || '—'}</span></td>
+          <td>${m.role === 'ORGANIZER' ? 'Organisateur' : 'Membre'}</td>
+          <td><span class="badge ${m.status === 'CONFIRMED' ? 'badge-success' : 'badge-warning'}">${m.status}</span></td>
+          <td>${actionMember(m, tontine)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function actionMember(m, t) {
+      if (getRole() === 'ORGANIZER' && m.status === 'PENDING') {
+        return `<button class="text-green-600 mr-2" onclick="confirmMember('${t.id}','${m.id}')">Confirmer</button><button class="text-red-600" onclick="rejectMember('${t.id}','${m.id}')">Rejeter</button>`;
+      }
+      if (getUser()?.id === m.user_id && m.contribution_status !== 'PAID') {
+        return `<a href="paiement.html?cycle_id=${t.current_cycle?.id}" class="btn-primary text-xs">Payer</a>`;
+      }
+      return '';
+    }
+
+    window.confirmMember = async (tontineId, memberId) => {
+      await apiFetch(`/tontines/${tontineId}/members/${memberId}`, { method: 'PATCH', body: JSON.stringify({ status: 'CONFIRMED' }) });
+      showToast('Membre confirmé', 'success');
+      location.reload();
+    };
+    window.rejectMember = async (tontineId, memberId) => {
+      await apiFetch(`/tontines/${tontineId}/members/${memberId}`, { method: 'PATCH', body: JSON.stringify({ status: 'REJECTED' }) });
+      location.reload();
+    };
+
+    function renderCycles(cycles) {
+      document.getElementById('cycles-tbody').innerHTML = cycles.map(c => `
+        <tr class="border-t">
+          <td class="py-2">${c.cycle_number}</td>
+          <td>${escapeHtml(c.beneficiary?.full_name)}</td>
+          <td>${formatMontant(c.distributed_amount)}</td>
+          <td>${formatDate(c.completed_at)}</td>
+          <td><span class="badge ${c.status === 'COMPLETED' ? 'badge-success' : 'badge-warning'}">${c.status}</span></td>
+          <td>${c.payout_tx_hash ? `<a href="${txLink(c.payout_tx_hash)}" target="_blank" class="text-[--accent] text-xs">Polygonscan</a>` : ''}</td>
+        </tr>
+      `).join('');
+    }
+
+    document.getElementById('verify-onchain-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('verify-onchain-btn');
+      showSpinner(btn);
+      try {
+        const data = await getTontineOnchain(window.contractAddress, window.contractAbi);
+        hideSpinner(btn, 'Vérifier on-chain');
+        if (data) {
+          document.getElementById('onchain-result').classList.remove('hidden');
+          document.getElementById('onchain-result').innerHTML = `Total on-chain : ${data.total_contributions_onchain} MATIC <a href="${addressLink(window.contractAddress)}" target="_blank" class="text-[--accent]">Voir sur Polygonscan</a>`;
+        }
+      } catch(e) {
+        hideSpinner(btn, 'Vérifier on-chain');
+        showToast('Erreur lecture blockchain', 'error');
+      }
+    });
+
+    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+    function scoreClass(level) {
+      if (level === 'EXCELLENT') return 'badge-success';
+      if (level === 'BON') return 'badge-success';
+      if (level === 'MOYEN') return 'badge-warning';
+      return 'badge-error';
+    }
+  </script>
+</body>
+</html>

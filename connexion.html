@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion — Tontine Chain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+  <div class="max-w-md w-full bg-white rounded-xl shadow p-8">
+    <div class="text-center mb-6">
+      <i data-lucide="wallet" class="w-12 h-12 text-[--accent] mx-auto mb-3"></i>
+      <h1 class="text-2xl font-bold">Connexion</h1>
+    </div>
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Téléphone</label>
+        <input type="tel" id="phone" placeholder="+229 XX XX XX XX" required class="w-full border rounded-lg px-3 py-2">
+      </div>
+      <div class="relative">
+        <label class="block text-sm font-medium mb-1">Mot de passe</label>
+        <input type="password" id="password" required class="w-full border rounded-lg px-3 py-2 pr-10">
+        <button type="button" id="toggle-password" class="absolute right-3 top-9 text-gray-400"><i data-lucide="eye" class="w-5 h-5"></i></button>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Code tontine <span class="text-gray-400">(optionnel)</span></label>
+        <input type="text" id="invite-code" maxlength="8" class="w-full border rounded-lg px-3 py-2 uppercase" placeholder="Code d'invitation">
+      </div>
+      <button type="submit" id="login-btn" class="btn-primary w-full py-2.5">Se connecter</button>
+    </form>
+    <div class="text-center mt-4 space-y-2">
+      <a href="#" class="text-sm text-[--accent]">Mot de passe oublié ?</a><br>
+      <span class="text-sm">Pas encore inscrit ? <a href="inscription.html" class="text-[--accent] font-medium">Créer un compte</a></span>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('toggle-password').addEventListener('click', function() {
+      const pwd = document.getElementById('password');
+      const icon = this.querySelector('i');
+      if (pwd.type === 'password') {
+        pwd.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        pwd.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      showSpinner(btn);
+      const phone = document.getElementById('phone').value.trim();
+      const password = document.getElementById('password').value;
+      const inviteCode = document.getElementById('invite-code').value.trim().toUpperCase();
+
+      try {
+        await login(phone, password);
+        hideSpinner(btn, 'Se connecter');
+        // Si code d'invitation fourni, rejoindre la tontine automatiquement
+        if (inviteCode) {
+          try {
+            await apiFetch('/tontines/join', {
+              method: 'POST',
+              body: JSON.stringify({ invitation_code: inviteCode })
+            });
+            showToast('Vous avez rejoint la tontine avec succès', 'success');
+          } catch(err) {
+            showToast('Connexion OK mais code tontine invalide', 'warning');
+          }
+        }
+        const role = getRole();
+        if (role === 'ORGANIZER') window.location.href = 'dashboard-admin.html';
+        else window.location.href = 'dashboard-membre.html';
+      } catch (err) {
+        hideSpinner(btn, 'Se connecter');
+        const container = document.querySelector('.bg-white');
+        if (err.code === 'INVALID_CREDENTIALS') showBanner(container, 'Numéro ou mot de passe incorrect.', 'error');
+        else if (err.code === 'ACCOUNT_DISABLED') showBanner(container, 'Compte suspendu.', 'error');
+        else showBanner(container, err.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

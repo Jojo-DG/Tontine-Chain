@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="user-role" content="">
+  <title>Dashboard Organisateur — Tontine Chain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/layout.js"></script>
+</head>
+<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-6xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold">Gestion des tontines</h1>
+      <a href="creer-tontine.html" class="btn-primary flex items-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i> Créer une tontine</a>
+    </div>
+
+    <div id="tontines-container">
+      <!-- Skeleton loaders -->
+      <div class="grid md:grid-cols-2 gap-4" id="skeleton-grid">
+        <div class="bg-white rounded-xl p-6 skeleton h-48"></div>
+        <div class="bg-white rounded-xl p-6 skeleton h-48"></div>
+      </div>
+    </div>
+    <div id="empty-state" class="hidden text-center py-16">
+      <i data-lucide="circle-off" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+      <p class="text-gray-500 mb-4">Créez votre première tontine</p>
+      <a href="creer-tontine.html" class="btn-primary">Créer une tontine</a>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const container = document.getElementById('tontines-container');
+      const skeleton = document.getElementById('skeleton-grid');
+      const empty = document.getElementById('empty-state');
+      try {
+        const data = await apiFetch('/tontines');
+        skeleton.remove();
+        if (!data.data || data.data.length === 0) {
+          empty.classList.remove('hidden');
+        } else {
+          renderTontines(data.data, container);
+        }
+      } catch (err) {
+        skeleton.remove();
+        showBanner(container, err.message, 'error');
+      }
+    });
+
+    function renderTontines(tontines, container) {
+      container.innerHTML = '<div class="grid md:grid-cols-2 gap-4"></div>';
+      const grid = container.querySelector('.grid');
+      tontines.forEach(tontine => {
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-xl p-6 shadow-sm';
+        const statusClass = statusBadgeClass(tontine.status);
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-3">
+            <h3 class="font-semibold text-lg">${escapeHtml(tontine.name)}</h3>
+            <span class="badge ${statusClass}">${tontine.status}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-sm mb-4">
+            <div><span class="text-gray-500">Membres :</span> ${tontine.members_confirmed || 0}/${tontine.max_members}</div>
+            <div><span class="text-gray-500">Montant part :</span> ${formatMontant(tontine.contribution_amount)}</div>
+            <div><span class="text-gray-500">Fréquence :</span> ${tontine.frequency}</div>
+            <div><span class="text-gray-500">Prochaine échéance :</span> ${tontine.current_cycle?.deadline ? countdown(tontine.current_cycle.deadline) : '—'}</div>
+          </div>
+          <div class="bg-gray-200 rounded-full h-2 mb-4">
+            <div class="bg-[--accent] h-2 rounded-full" style="width:${progressPercent(tontine)}%"></div>
+          </div>
+          <p class="text-sm text-gray-600 mb-3">Bénéficiaire : <strong>${tontine.current_cycle?.beneficiary?.full_name || '—'}</strong></p>
+          ${tontine.penalty_total > 0 ? `<p class="text-sm text-red-600 mb-3 flex items-center gap-1"><i data-lucide="alert-circle" class="w-4 h-4"></i> Pénalités collectées : ${formatMontant(tontine.penalty_total)}</p>` : ''}
+          <div class="flex gap-2">
+            ${actionButtons(tontine)}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      lucide.createIcons(); // pour les icônes dynamiques
+    }
+
+    function statusBadgeClass(status) {
+      if (status === 'DRAFT') return 'badge-info';
+      if (status === 'OPEN') return 'badge-info';
+      if (status === 'ACTIVE') return 'badge-success';
+      if (status === 'COMPLETED') return 'badge-neutral';
+      return 'badge-neutral';
+    }
+
+    function progressPercent(t) {
+      if (!t.contributions_total || t.contributions_total === 0) return 0;
+      return Math.round((t.contributions_confirmed || 0) / t.contributions_total * 100);
+    }
+
+    function actionButtons(t) {
+      if (t.status === 'DRAFT') {
+        return `<button class="btn-outline text-sm" onclick="openTontine('${t.id}')">Ouvrir aux inscriptions</button>`;
+      }
+      if (t.status === 'OPEN') {
+        return `<button class="btn-primary text-sm" onclick="startTontine('${t.id}')" ${t.members_confirmed < 2 ? 'disabled title="Minimum 2 membres confirmés"' : ''}>Démarrer la tontine</button>
+                <span class="text-xs text-gray-500 self-center">Code : ${t.invitation_code || '—'}</span>`;
+      }
+      if (t.status === 'ACTIVE') {
+        return `<a href="tontine.html?id=${t.id}" class="btn-outline text-sm">Voir le détail</a>`;
+      }
+      return '';
+    }
+
+    window.openTontine = async (id) => {
+      try {
+        await apiFetch(`/tontines/${id}/open`, { method: 'POST' });
+        showToast('Tontine ouverte aux inscriptions', 'success');
+        location.reload();
+      } catch(e) { showToast(e.message, 'error'); }
+    };
+
+    window.startTontine = async (id) => {
+      try {
+        await apiFetch(`/tontines/${id}/start`, { method: 'POST' });
+        showToast('Tontine démarrée', 'success');
+        location.reload();
+      } catch(e) { showToast(e.message, 'error'); }
+    };
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+    }
+  </script>
+</body>
+</html>

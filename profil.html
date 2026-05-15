@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="user-role" content="">
+  <title>Mon profil — Tontine Chain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/blockchain.js"></script>
+  <script src="assets/js/layout.js"></script>
+</head>
+<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-4xl mx-auto space-y-6">
+    <div id="loading">
+      <div class="skeleton h-40 rounded-xl mb-4"></div>
+      <div class="skeleton h-40 rounded-xl"></div>
+    </div>
+    <div id="content" class="hidden space-y-6">
+      <!-- Carte profil -->
+      <div class="bg-white rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold">Informations personnelles</h2>
+          <button id="edit-profile-btn" class="btn-outline text-sm">Modifier</button>
+        </div>
+        <div id="profile-view" class="space-y-2">
+          <p><span class="text-gray-500">Nom complet :</span> <strong id="p-name">—</strong></p>
+          <p><span class="text-gray-500">Téléphone :</span> <strong id="p-phone">—</strong></p>
+          <p><span class="text-gray-500">Email :</span> <strong id="p-email">—</strong></p>
+          <p><span class="text-gray-500">Inscrit le :</span> <strong id="p-joined">—</strong></p>
+          <p><span class="text-gray-500">Wallet :</span> <strong id="p-wallet" class="font-mono">—</strong> <a id="p-polygon-link" href="#" target="_blank" class="text-[--accent] text-xs">Polygonscan</a></p>
+        </div>
+        <form id="profile-edit-form" class="hidden space-y-3 mt-3">
+          <input type="text" id="edit-fullname" class="w-full border rounded-lg px-3 py-2" placeholder="Nom complet">
+          <input type="email" id="edit-email" class="w-full border rounded-lg px-3 py-2" placeholder="Email">
+          <div class="flex gap-2">
+            <button type="submit" class="btn-primary">Enregistrer</button>
+            <button type="button" id="cancel-edit-btn" class="btn-outline">Annuler</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Score -->
+      <div class="bg-white rounded-xl p-6" id="score-section">
+        <h3 class="font-semibold mb-2">Score de fiabilité</h3>
+        <div class="flex items-center gap-4" id="score-display">
+          <span class="text-4xl font-bold" id="score-num">—</span>
+          <span class="badge badge-success" id="score-level">—</span>
+        </div>
+        <div class="bg-gray-200 rounded-full h-3 mt-3"><div id="score-progress" class="bg-[--accent] h-3 rounded-full" style="width:0%"></div></div>
+        <div class="grid grid-cols-3 gap-4 mt-3 text-sm">
+          <div>Total cotisations : <strong id="s-total">—</strong></div>
+          <div>À temps : <strong id="s-ontime">—</strong></div>
+          <div>En retard : <strong id="s-late">—</strong></div>
+          <div>Tontines complétées : <strong id="s-completed">—</strong></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (async () => {
+      try {
+        const user = getUser();
+        const [scoreData] = await Promise.all([
+          apiFetch(`/users/${user.id}/score`)
+        ]);
+        document.getElementById('loading').remove();
+        document.getElementById('content').classList.remove('hidden');
+
+        document.getElementById('p-name').textContent = user.full_name;
+        document.getElementById('p-phone').textContent = user.phone;
+        document.getElementById('p-email').textContent = user.email || '—';
+        document.getElementById('p-joined').textContent = formatDate(user.created_at);
+        document.getElementById('p-wallet').textContent = shortAddress(user.wallet_address);
+        document.getElementById('p-polygon-link').href = addressLink(user.wallet_address);
+
+        document.getElementById('edit-fullname').value = user.full_name;
+        document.getElementById('edit-email').value = user.email || '';
+
+        const s = scoreData.data;
+        document.getElementById('score-num').textContent = s.score;
+        document.getElementById('score-level').textContent = s.level;
+        document.getElementById('score-level').className = `badge ${scoreBadge(s.level)}`;
+        document.getElementById('score-progress').style.width = (s.score/1000*100) + '%';
+        document.getElementById('s-total').textContent = s.total_contributions;
+        document.getElementById('s-ontime').textContent = s.on_time;
+        document.getElementById('s-late').textContent = s.late;
+        document.getElementById('s-completed').textContent = s.completed_tontines;
+
+      } catch(e) { showToast(e.message, 'error'); }
+    })();
+
+    document.getElementById('edit-profile-btn').addEventListener('click', () => {
+      document.getElementById('profile-view').classList.add('hidden');
+      document.getElementById('profile-edit-form').classList.remove('hidden');
+    });
+    document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+      document.getElementById('profile-view').classList.remove('hidden');
+      document.getElementById('profile-edit-form').classList.add('hidden');
+    });
+
+    document.getElementById('profile-edit-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        full_name: document.getElementById('edit-fullname').value.trim(),
+        email: document.getElementById('edit-email').value.trim()
+      };
+      try {
+        await apiFetch('/users/me', { method: 'PATCH', body: JSON.stringify(payload) });
+        showToast('Profil mis à jour', 'success');
+        // Mettre à jour l'affichage
+        document.getElementById('p-name').textContent = payload.full_name;
+        document.getElementById('p-email').textContent = payload.email;
+        document.getElementById('profile-view').classList.remove('hidden');
+        document.getElementById('profile-edit-form').classList.add('hidden');
+      } catch (err) { showBanner(document.querySelector('.bg-white'), err.message, 'error'); }
+    });
+
+    function scoreBadge(level) {
+      if (level === 'EXCELLENT') return 'badge-success';
+      if (level === 'BON') return 'badge-success';
+      if (level === 'MOYEN') return 'badge-warning';
+      return 'badge-error';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vérification OTP — Tontine Chain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+  <div class="max-w-md w-full bg-white rounded-xl shadow p-8">
+    <div class="text-center mb-6">
+      <i data-lucide="smartphone" class="w-12 h-12 text-[--accent] mx-auto mb-3"></i>
+      <h1 class="text-2xl font-bold">Vérifiez votre numéro</h1>
+      <p class="text-gray-600" id="phone-display">Un code à 6 chiffres a été envoyé au </p>
+    </div>
+
+    <div id="otp-input-group" class="flex justify-center gap-2 mb-4">
+      <input type="text" id="otp" maxlength="6" class="w-full text-center text-2xl tracking-widest border rounded-lg py-3 focus:ring-2 focus:ring-[--accent] outline-none" placeholder="000000">
+    </div>
+
+    <div class="text-center text-sm text-gray-500 mb-4">
+      <span id="countdown">Code valide pendant 10:00</span>
+    </div>
+
+    <button id="verify-btn" class="btn-primary w-full py-2.5 mb-4">Valider</button>
+    <button id="resend-btn" class="btn-outline w-full py-2.5 hidden">Renvoyer le code</button>
+
+    <p class="text-center text-sm"><a href="connexion.html" class="text-[--accent]">Retour à la connexion</a></p>
+  </div>
+
+  <script>
+    const phone = sessionStorage.getItem('registration_phone');
+    if (!phone) window.location.href = 'inscription.html';
+    document.getElementById('phone-display').textContent = `Un code à 6 chiffres a été envoyé au ${phone}`;
+
+    let timer;
+    let timeLeft = 600; // 10 minutes en secondes
+    const countdownEl = document.getElementById('countdown');
+    const resendBtn = document.getElementById('resend-btn');
+    const verifyBtn = document.getElementById('verify-btn');
+    const otpInput = document.getElementById('otp');
+
+    function startCountdown() {
+      clearInterval(timer);
+      timeLeft = 600;
+      updateCountdown();
+      timer = setInterval(() => {
+        timeLeft--;
+        updateCountdown();
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          countdownEl.textContent = 'Code expiré';
+          resendBtn.classList.remove('hidden');
+          verifyBtn.disabled = true;
+          verifyBtn.classList.add('opacity-50');
+        }
+      }, 1000);
+    }
+
+    function updateCountdown() {
+      const mins = Math.floor(timeLeft / 60);
+      const secs = timeLeft % 60;
+      countdownEl.textContent = `Code valide pendant ${mins}:${secs.toString().padStart(2,'0')}`;
+    }
+
+    startCountdown();
+
+    otpInput.addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/\D/g, '').slice(0,6);
+    });
+
+    verifyBtn.addEventListener('click', async () => {
+      const otp = otpInput.value.trim();
+      if (otp.length !== 6) {
+        showBanner(document.querySelector('.bg-white'), 'Veuillez entrer le code à 6 chiffres.', 'warning');
+        return;
+      }
+      showSpinner(verifyBtn);
+      try {
+        await verifyOtp(phone, otp);
+        hideSpinner(verifyBtn, 'Valider');
+        showToast('Compte activé !', 'success');
+        sessionStorage.removeItem('registration_phone');
+        setTimeout(() => window.location.href = 'connexion.html', 1000);
+      } catch (err) {
+        hideSpinner(verifyBtn, 'Valider');
+        if (err.code === 'OTP_INVALID') showBanner(document.querySelector('.bg-white'), 'Code OTP incorrect.', 'error');
+        else if (err.code === 'OTP_EXPIRED') { showBanner(document.querySelector('.bg-white'), 'Code OTP expiré (10 min).', 'warning'); resendBtn.classList.remove('hidden'); }
+        else if (err.code === 'OTP_MAX_ATTEMPTS') { showBanner(document.querySelector('.bg-white'), 'Trop de tentatives — réessayez dans 1h.', 'error'); verifyBtn.disabled = true; otpInput.disabled = true; }
+        else showBanner(document.querySelector('.bg-white'), err.message, 'error');
+      }
+    });
+
+    resendBtn.addEventListener('click', async () => {
+      showSpinner(resendBtn);
+      try {
+        await apiFetch('/auth/resend-otp', { method: 'POST', body: JSON.stringify({ phone }) });
+        hideSpinner(resendBtn, 'Renvoyer le code');
+        showToast('Code renvoyé', 'success');
+        startCountdown();
+        resendBtn.classList.add('hidden');
+        verifyBtn.disabled = false;
+        verifyBtn.classList.remove('opacity-50');
+      } catch (err) {
+        hideSpinner(resendBtn, 'Renvoyer le code');
+        showBanner(document.querySelector('.bg-white'), err.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

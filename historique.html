@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="user-role" content="">
+  <title>Historique — Tontine Chain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/layout.js"></script>
+</head>
+<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-5xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Historique</h1>
+    <div class="flex border-b mb-6">
+      <button class="tab-btn px-4 py-2 font-medium border-b-2 border-transparent active" data-tab="contributions">Mes cotisations</button>
+      <button class="tab-btn px-4 py-2 font-medium border-b-2 border-transparent" data-tab="cycles">Par tontine</button>
+    </div>
+
+    <div id="tab-contributions" class="tab-content">
+      <div class="skeleton h-40 rounded-xl" id="contrib-skeleton"></div>
+      <div class="bg-white rounded-xl p-6 overflow-x-auto hidden" id="contrib-table-container">
+        <table class="w-full text-sm">
+          <thead><tr class="text-left text-gray-500"><th>Tontine</th><th>Cycle</th><th>Montant</th><th>Statut</th><th>Date</th><th>On-chain</th></tr></thead>
+          <tbody id="contrib-tbody"></tbody>
+        </table>
+        <div id="pagination-contrib" class="flex justify-center mt-4 gap-2"></div>
+      </div>
+    </div>
+
+    <div id="tab-cycles" class="tab-content hidden">
+      <div class="skeleton h-40 rounded-xl" id="cycles-skeleton"></div>
+      <div class="bg-white rounded-xl p-6 overflow-x-auto hidden" id="cycles-table-container">
+        <table class="w-full text-sm">
+          <thead><tr class="text-left text-gray-500"><th>Tontine</th><th>Cycle</th><th>Bénéficiaire</th><th>Montant distribué</th><th>Date</th></tr></thead>
+          <tbody id="cycles-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let currentTab = 'contributions';
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'border-[--accent]', 'text-[--accent]'));
+        this.classList.add('active', 'border-[--accent]', 'text-[--accent]');
+        currentTab = this.dataset.tab;
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        document.getElementById(`tab-${currentTab}`).classList.remove('hidden');
+        if (currentTab === 'cycles' && !window.cyclesLoaded) loadCyclesTab();
+      });
+    });
+
+    // Charger contributions
+    (async function loadContributions() {
+      try {
+        const data = await apiFetch('/contributions/my?page=1&limit=20');
+        document.getElementById('contrib-skeleton').remove();
+        document.getElementById('contrib-table-container').classList.remove('hidden');
+        const contribs = data.data || [];
+        document.getElementById('contrib-tbody').innerHTML = contribs.map(c => `
+          <tr class="border-t">
+            <td class="py-2">${escapeHtml(c.tontine_name)}</td>
+            <td>${c.cycle_number}</td>
+            <td>${formatMontant(c.amount)}</td>
+            <td><span class="badge ${c.status === 'CONFIRMED' ? 'badge-success' : 'badge-warning'}">${c.status}</span></td>
+            <td>${formatDate(c.created_at)}</td>
+            <td>${c.blockchain_tx_hash ? `<a href="${txLink(c.blockchain_tx_hash)}" target="_blank"><i data-lucide="check-circle-2" class="w-4 h-4 text-green-600"></i></a>` : '—'}</td>
+          </tr>
+        `).join('');
+        lucide.createIcons();
+      } catch(e) { showToast(e.message, 'error'); }
+    })();
+
+    async function loadCyclesTab() {
+      try {
+        const tontinesData = await apiFetch('/tontines');
+        const tontines = tontinesData.data || [];
+        const allCycles = [];
+        for (let t of tontines) {
+          const cyclesRes = await apiFetch(`/tontines/${t.id}/cycles`);
+          cyclesRes.data.forEach(c => allCycles.push({ ...c, tontine_name: t.name }));
+        }
+        document.getElementById('cycles-skeleton').remove();
+        document.getElementById('cycles-table-container').classList.remove('hidden');
+        document.getElementById('cycles-tbody').innerHTML = allCycles.map(c => `
+          <tr class="border-t ${c.beneficiary?.id === getUser()?.id ? 'bg-[--secondary]' : ''}">
+            <td class="py-2">${escapeHtml(c.tontine_name)}</td>
+            <td>${c.cycle_number}</td>
+            <td>${escapeHtml(c.beneficiary?.full_name)}</td>
+            <td>${formatMontant(c.distributed_amount)}</td>
+            <td>${formatDate(c.completed_at)}</td>
+          </tr>
+        `).join('');
+        window.cyclesLoaded = true;
+      } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+  </script>
+</body>
+</html>

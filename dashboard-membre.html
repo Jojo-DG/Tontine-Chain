@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="user-role" content="">
+  <title>Dashboard Membre — Tontine Chain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/layout.js"></script>
+</head>
+<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-6xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold">Mes tontines</h1>
+      <a href="rejoindre.html" class="btn-outline flex items-center gap-2"><i data-lucide="plus-circle" class="w-5 h-5"></i> Rejoindre une tontine</a>
+    </div>
+
+    <div id="tontines-container">
+      <div class="grid md:grid-cols-2 gap-4" id="skeleton-grid">
+        <div class="bg-white rounded-xl p-6 skeleton h-48"></div>
+      </div>
+    </div>
+    <div id="empty-state" class="hidden text-center py-16">
+      <i data-lucide="users" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+      <p class="text-gray-500 mb-4">Vous n'avez pas encore rejoint de tontine.</p>
+      <a href="rejoindre.html" class="btn-primary">Rejoindre une tontine</a>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const container = document.getElementById('tontines-container');
+      const skeleton = document.getElementById('skeleton-grid');
+      const empty = document.getElementById('empty-state');
+      try {
+        const activeData = await apiFetch('/tontines?status=ACTIVE');
+        const allData = await apiFetch('/tontines');
+        skeleton.remove();
+        const tontines = allData.data || [];
+        if (tontines.length === 0) {
+          empty.classList.remove('hidden');
+        } else {
+          renderMemberTontines(tontines, container);
+        }
+      } catch (err) {
+        skeleton.remove();
+        showBanner(container, err.message, 'error');
+      }
+    });
+
+    function renderMemberTontines(tontines, container) {
+      container.innerHTML = '<div class="grid md:grid-cols-2 gap-4"></div>';
+      const grid = container.querySelector('.grid');
+      tontines.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'bg-white rounded-xl p-6 shadow-sm';
+        const paid = t.my_contribution_status === 'PAID';
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-3">
+            <h3 class="font-semibold text-lg">${escapeHtml(t.name)}</h3>
+            <span class="badge ${paid ? 'badge-success' : 'badge-warning'}">${paid ? 'Payé' : 'Impayé'}</span>
+          </div>
+          ${!paid && t.penalty ? `<div class="flex items-center gap-1 text-red-600 text-sm mb-2"><i data-lucide="alert-circle" class="w-4 h-4"></i> Pénalité : ${formatMontant(t.penalty)}</div>` : ''}
+          <div class="text-sm space-y-1 mb-3">
+            <div>Fréquence : ${t.frequency} | Membres : ${t.members_confirmed || 0}/${t.max_members}</div>
+            <div>Prochaine échéance : ${t.current_cycle?.deadline ? countdown(t.current_cycle.deadline) : '—'}</div>
+            <div>Bénéficiaire : <strong>${t.current_cycle?.beneficiary?.full_name || '—'}</strong></div>
+            <div>${t.contributions_confirmed || 0}/${t.contributions_total || 0} membres ont payé</div>
+          </div>
+          <div class="bg-gray-200 rounded-full h-2 mb-4">
+            <div class="bg-[--accent] h-2 rounded-full" style="width:${t.contributions_total ? (t.contributions_confirmed/t.contributions_total*100) : 0}%"></div>
+          </div>
+          <div class="flex gap-2">
+            <a href="tontine.html?id=${t.id}" class="btn-outline text-sm">Voir le détail</a>
+            ${!paid ? `<a href="paiement.html?cycle_id=${t.current_cycle?.id || ''}" class="btn-primary text-sm">Payer ma cotisation</a>` : ''}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+    function escapeHtml(str) { return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+  </script>
+</body>
+</html>

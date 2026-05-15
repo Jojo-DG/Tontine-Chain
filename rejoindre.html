@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="user-role" content="">
+  <title>Rejoindre une tontine — Tontine Chain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/layout.js"></script>
+</head>
+<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-md mx-auto">
+    <div class="bg-white rounded-xl shadow p-8 text-center">
+      <i data-lucide="users" class="w-12 h-12 text-[--accent] mx-auto mb-4"></i>
+      <h1 class="text-2xl font-bold mb-2">Rejoindre une tontine</h1>
+      <p class="text-gray-600 mb-6">Entrez le code d'invitation fourni par l'organisateur.</p>
+      <form id="join-form" class="space-y-4">
+        <input type="text" id="invite-code" maxlength="8" class="w-full border rounded-lg px-3 py-3 text-center text-xl tracking-widest uppercase" placeholder="XXXXXXXX" required>
+        <button type="submit" id="join-btn" class="btn-primary w-full py-2.5">Valider le code</button>
+      </form>
+      <div id="result-message" class="mt-4"></div>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('join-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('join-btn');
+      showSpinner(btn);
+      const code = document.getElementById('invite-code').value.trim().toUpperCase();
+      try {
+        // L'API attend l'ID de la tontine en paramètre, mais on ne l'a pas. 
+        // On suppose que l'endpoint POST /tontines/join avec invitation_code fait la correspondance.
+        const res = await apiFetch('/tontines/join', {
+          method: 'POST',
+          body: JSON.stringify({ invitation_code: code })
+        });
+        hideSpinner(btn, 'Valider le code');
+        document.getElementById('result-message').innerHTML = `<div class="bg-green-50 p-3 rounded text-green-700">Demande envoyée, en attente de validation par l'organisateur.</div>`;
+        setTimeout(() => window.location.href = 'dashboard-membre.html', 2000);
+      } catch (err) {
+        hideSpinner(btn, 'Valider le code');
+        if (err.code === 'INVITATION_CODE_INVALID') showBanner(document.querySelector('.bg-white'), 'Code d\'invitation invalide ou expiré.', 'error');
+        else if (err.code === 'TONTINE_FULL') showBanner(document.querySelector('.bg-white'), 'Cette tontine est complète.', 'error');
+        else if (err.code === 'ALREADY_MEMBER') showBanner(document.querySelector('.bg-white'), 'Vous êtes déjà dans cette tontine.', 'warning');
+        else showBanner(document.querySelector('.bg-white'), err.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

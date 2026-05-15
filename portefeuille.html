@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="user-role" content="">
+  <title>Portefeuille — Tontine Chain</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/blockchain.js"></script>
+  <script src="assets/js/layout.js"></script>
+</head>
+<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-4xl mx-auto space-y-6">
+    <div id="loading" class="space-y-4">
+      <div class="skeleton h-32 rounded-xl"></div>
+      <div class="skeleton h-32 rounded-xl"></div>
+      <div class="skeleton h-40 rounded-xl"></div>
+    </div>
+
+    <div id="content" class="hidden space-y-6">
+      <!-- Compte Épargne -->
+      <div class="bg-white rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-lg flex items-center gap-2"><i data-lucide="piggy-bank" class="w-5 h-5 text-[--accent]"></i> Compte Épargne</h3>
+          <span class="badge badge-success">Actif</span>
+        </div>
+        <div class="text-3xl font-bold mb-4" id="savings-balance">— XOF</div>
+        <div class="flex gap-2">
+          <button id="recharge-btn" class="btn-outline text-sm">Recharger</button>
+          <button id="transfer-btn" class="btn-outline text-sm">Transférer</button>
+          <button id="withdraw-btn" class="btn-outline text-sm">Retirer</button>
+        </div>
+      </div>
+
+      <!-- Compte Dépenses -->
+      <div class="bg-white rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-lg flex items-center gap-2"><i data-lucide="credit-card" class="w-5 h-5 text-[--accent]"></i> Compte Dépenses</h3>
+          <span class="badge badge-info">Courant</span>
+        </div>
+        <div class="text-3xl font-bold mb-4" id="expense-balance">— XOF</div>
+        <p class="text-sm text-gray-500">Utilisé pour les cotisations automatiques</p>
+      </div>
+
+      <!-- Adresse wallet (secondaire) -->
+      <div class="bg-white rounded-xl p-4 text-sm text-gray-600">
+        <span class="font-medium">Wallet blockchain :</span>
+        <span id="wallet-address" class="font-mono">—</span>
+        <a id="polygon-link" href="#" target="_blank" class="text-[--accent] ml-2">Voir sur Polygonscan</a>
+      </div>
+    </div>
+
+    <!-- Modal actions (recharge/transfert/retrait) -->
+    <div id="action-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-xl p-6 max-w-md w-full">
+        <h3 id="modal-title" class="text-lg font-bold mb-4">Recharger</h3>
+        <form id="action-form" class="space-y-4">
+          <input type="number" id="action-amount" placeholder="Montant en XOF" class="w-full border rounded-lg px-3 py-2" required>
+          <div id="action-source" class="hidden">
+            <label class="block text-sm mb-1">Depuis</label>
+            <select id="source-account" class="w-full border rounded-lg px-3 py-2">
+              <option value="savings">Compte Épargne</option>
+              <option value="expense">Compte Dépenses</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-primary w-full">Valider</button>
+          <button type="button" id="close-modal" class="btn-outline w-full">Annuler</button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let accountsData = null;
+    (async () => {
+      try {
+        const [userData, accountsRes] = await Promise.all([
+          apiFetch('/users/me'),
+          apiFetch('/wallets/fcfa/accounts') // endpoint supposé pour les comptes FCFA
+        ]);
+        document.getElementById('loading').remove();
+        document.getElementById('content').classList.remove('hidden');
+
+        const u = userData.data;
+        document.getElementById('wallet-address').textContent = shortAddress(u.wallet_address);
+        document.getElementById('polygon-link').href = addressLink(u.wallet_address);
+
+        accountsData = accountsRes.data;
+        document.getElementById('savings-balance').textContent = formatMontant(accountsData.savings_balance);
+        document.getElementById('expense-balance').textContent = formatMontant(accountsData.expense_balance);
+      } catch(e) {
+        showToast(e.message, 'error');
+      }
+    })();
+
+    const modal = document.getElementById('action-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const actionForm = document.getElementById('action-form');
+    const actionSource = document.getElementById('action-source');
+    let currentAction = '';
+
+    document.getElementById('recharge-btn').addEventListener('click', () => openModal('recharge'));
+    document.getElementById('transfer-btn').addEventListener('click', () => openModal('transfer'));
+    document.getElementById('withdraw-btn').addEventListener('click', () => openModal('withdraw'));
+    document.getElementById('close-modal').addEventListener('click', () => modal.classList.add('hidden'));
+
+    function openModal(action) {
+      currentAction = action;
+      if (action === 'recharge') {
+        modalTitle.textContent = 'Recharger le compte Épargne';
+        actionSource.classList.add('hidden');
+      } else if (action === 'transfer') {
+        modalTitle.textContent = 'Transférer entre comptes';
+        actionSource.classList.remove('hidden');
+      } else if (action === 'withdraw') {
+        modalTitle.textContent = 'Retirer vers Mobile Money';
+        actionSource.classList.add('hidden');
+      }
+      actionForm.reset();
+      modal.classList.remove('hidden');
+    }
+
+    actionForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const amount = parseInt(document.getElementById('action-amount').value);
+      if (!amount || amount <= 0) return showToast('Montant invalide', 'error');
+      const btn = actionForm.querySelector('button[type="submit"]');
+      showSpinner(btn);
+      try {
+        let endpoint, payload;
+        if (currentAction === 'recharge') {
+          endpoint = '/wallets/fcfa/recharge';
+          payload = { amount };
+        } else if (currentAction === 'transfer') {
+          const source = document.getElementById('source-account').value;
+          endpoint = '/wallets/fcfa/transfer';
+          payload = { amount, from: source, to: source === 'savings' ? 'expense' : 'savings' };
+        } else if (currentAction === 'withdraw') {
+          endpoint = '/wallets/fcfa/withdraw';
+          payload = { amount };
+        }
+        await apiFetch(endpoint, { method: 'POST', body: JSON.stringify(payload) });
+        hideSpinner(btn, 'Valider');
+        showToast('Opération réussie', 'success');
+        modal.classList.add('hidden');
+        location.reload();
+      } catch(err) {
+        hideSpinner(btn, 'Valider');
+        showToast(err.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>
