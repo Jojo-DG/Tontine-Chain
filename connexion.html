@@ -29,10 +29,6 @@
         <input type="password" id="password" required class="w-full border rounded-lg px-3 py-2 pr-10">
         <button type="button" id="toggle-password" class="absolute right-3 top-9 text-gray-400"><i data-lucide="eye" class="w-5 h-5"></i></button>
       </div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Code tontine <span class="text-gray-400">(optionnel)</span></label>
-        <input type="text" id="invite-code" maxlength="8" class="w-full border rounded-lg px-3 py-2 uppercase" placeholder="Code d'invitation">
-      </div>
       <button type="submit" id="login-btn" class="btn-primary w-full py-2.5">Se connecter</button>
     </form>
     <div class="text-center mt-4 space-y-2">
@@ -61,23 +57,11 @@
       showSpinner(btn);
       const phone = document.getElementById('phone').value.trim();
       const password = document.getElementById('password').value;
-      const inviteCode = document.getElementById('invite-code').value.trim().toUpperCase();
 
       try {
         await login(phone, password);
         hideSpinner(btn, 'Se connecter');
-        // Si code d'invitation fourni, rejoindre la tontine automatiquement
-        if (inviteCode) {
-          try {
-            await apiFetch('/tontines/join', {
-              method: 'POST',
-              body: JSON.stringify({ invitation_code: inviteCode })
-            });
-            showToast('Vous avez rejoint la tontine avec succès', 'success');
-          } catch(err) {
-            showToast('Connexion OK mais code tontine invalide', 'warning');
-          }
-        }
+        
         const role = getRole();
         if (role === 'ORGANIZER') window.location.href = 'dashboard-admin.html';
         else window.location.href = 'dashboard-membre.html';

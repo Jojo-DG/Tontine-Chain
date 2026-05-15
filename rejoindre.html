@@ -20,10 +20,17 @@
     <div class="bg-white rounded-xl shadow p-8 text-center">
       <i data-lucide="users" class="w-12 h-12 text-[--accent] mx-auto mb-4"></i>
       <h1 class="text-2xl font-bold mb-2">Rejoindre une tontine</h1>
-      <p class="text-gray-600 mb-6">Entrez le code d'invitation fourni par l'organisateur.</p>
+      <p class="text-gray-600 mb-6">Entrez l'identifiant (ID) de la tontine et le code d'invitation.</p>
       <form id="join-form" class="space-y-4">
-        <input type="text" id="invite-code" maxlength="8" class="w-full border rounded-lg px-3 py-3 text-center text-xl tracking-widest uppercase" placeholder="XXXXXXXX" required>
-        <button type="submit" id="join-btn" class="btn-primary w-full py-2.5">Valider le code</button>
+        <div>
+          <label class="block text-sm text-left font-medium mb-1">ID de la tontine</label>
+          <input type="text" id="tontine-id" class="w-full border rounded-lg px-3 py-2" placeholder="ID (ex: UUID)" required>
+        </div>
+        <div>
+          <label class="block text-sm text-left font-medium mb-1">Code d'invitation</label>
+          <input type="text" id="invite-code" maxlength="8" class="w-full border rounded-lg px-3 py-3 text-center text-xl tracking-widest uppercase" placeholder="XXXXXXXX" required>
+        </div>
+        <button type="submit" id="join-btn" class="btn-primary w-full py-2.5">Rejoindre la tontine</button>
       </form>
       <div id="result-message" class="mt-4"></div>
     </div>
@@ -34,22 +41,20 @@
       e.preventDefault();
       const btn = document.getElementById('join-btn');
       showSpinner(btn);
+      const tId = document.getElementById('tontine-id').value.trim();
       const code = document.getElementById('invite-code').value.trim().toUpperCase();
       try {
-        // L'API attend l'ID de la tontine en paramètre, mais on ne l'a pas. 
-        // On suppose que l'endpoint POST /tontines/join avec invitation_code fait la correspondance.
-        const res = await apiFetch('/tontines/join', {
+        await apiFetch(`/tontines/${tId}/join`, {
           method: 'POST',
           body: JSON.stringify({ invitation_code: code })
         });
-        hideSpinner(btn, 'Valider le code');
-        document.getElementById('result-message').innerHTML = `<div class="bg-green-50 p-3 rounded text-green-700">Demande envoyée, en attente de validation par l'organisateur.</div>`;
+        hideSpinner(btn, 'Rejoindre la tontine');
+        document.getElementById('result-message').innerHTML = `<div class="bg-green-50 p-3 rounded text-green-700">Demande envoyée avec succès !</div>`;
         setTimeout(() => window.location.href = 'dashboard-membre.html', 2000);
       } catch (err) {
-        hideSpinner(btn, 'Valider le code');
-        if (err.code === 'INVITATION_CODE_INVALID') showBanner(document.querySelector('.bg-white'), 'Code d\'invitation invalide ou expiré.', 'error');
+        hideSpinner(btn, 'Rejoindre la tontine');
+        if (err.code === 'INVITATION_CODE_INVALID') showBanner(document.querySelector('.bg-white'), 'Code d\'invitation invalide.', 'error');
         else if (err.code === 'TONTINE_FULL') showBanner(document.querySelector('.bg-white'), 'Cette tontine est complète.', 'error');
-        else if (err.code === 'ALREADY_MEMBER') showBanner(document.querySelector('.bg-white'), 'Vous êtes déjà dans cette tontine.', 'warning');
         else showBanner(document.querySelector('.bg-white'), err.message, 'error');
       }
     });

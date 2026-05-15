@@ -40,7 +40,6 @@
       const skeleton = document.getElementById('skeleton-grid');
       const empty = document.getElementById('empty-state');
       try {
-        const activeData = await apiFetch('/tontines?status=ACTIVE');
         const allData = await apiFetch('/tontines');
         skeleton.remove();
         const tontines = allData.data || [];

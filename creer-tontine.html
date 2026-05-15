@@ -46,8 +46,7 @@
         <div>
           <label class="block text-sm font-medium mb-1">Date de début</label>
           <input type="date" id="start_date" required class="w-full border rounded-lg px-3 py-2">
-        </div>
-        <button type="button" id="toggle-rules" class="text-[--accent] text-sm font-medium">+ Règles optionnelles</button>
+               <button type="button" id="toggle-rules" class="text-[--accent] text-sm font-medium">+ Règles optionnelles</button>
         <div id="optional-rules" class="hidden space-y-4">
           <div>
             <label class="block text-sm font-medium mb-1">Absences max autorisées</label>
@@ -59,17 +58,6 @@
           </div>
         </div>
 
-        <!-- NOUVEAU : Invitation de membres par pseudo -->
-        <div class="border-t pt-4 mt-4">
-          <h3 class="font-semibold mb-3 flex items-center gap-2"><i data-lucide="users" class="w-5 h-5"></i> Inviter des membres</h3>
-          <div class="flex gap-2 mb-3">
-            <input type="text" id="member-search" placeholder="Rechercher par pseudo..." class="flex-1 border rounded-lg px-3 py-2">
-            <button type="button" id="add-member-btn" class="btn-primary">Ajouter</button>
-          </div>
-          <ul id="invited-members-list" class="space-y-2 text-sm"></ul>
-          <p class="text-xs text-gray-500 mt-2">Les membres ajoutés apparaîtront avec le statut "En attente". Vous pouvez également partager le code d'invitation plus tard.</p>
-        </div>
-
         <button type="submit" id="submit-btn" class="btn-primary w-full py-2.5">Créer la tontine</button>
       </form>
     </div>
@@ -79,9 +67,10 @@
       <div class="bg-white rounded-xl p-6 max-w-md w-full text-center">
         <i data-lucide="check-circle-2" class="w-12 h-12 text-[--accent] mx-auto mb-4"></i>
         <h3 class="text-xl font-bold mb-2">Tontine créée !</h3>
+        <p class="mb-2">ID de la tontine : <strong id="tontine-id" class="text-sm break-all"></strong></p>
         <p class="mb-2">Code d'invitation : <strong id="invite-code" class="text-lg tracking-wider"></strong></p>
-        <p class="text-sm text-gray-500 mb-4">Partagez ce code pour inviter d'autres membres.</p>
-        <button id="open-btn" class="btn-primary w-full mb-2">Ouvrir aux inscriptions</button>
+        <p class="text-sm text-gray-500 mb-4">Partagez l'ID et le code pour inviter des membres.</p>
+        <button id="open-btn" class="btn-primary w-full mb-2">Ouvrer aux inscriptions</button>
         <a href="dashboard-admin.html" class="btn-outline w-full block text-center">Retour au tableau de bord</a>
       </div>
     </div>
@@ -91,52 +80,6 @@
     // Gestion des règles optionnelles
     document.getElementById('toggle-rules').addEventListener('click', () => {
       document.getElementById('optional-rules').classList.toggle('hidden');
-    });
-
-    // Gestion des invitations de membres
-    const invitedMembers = new Map(); // id -> pseudo
-    const membersListEl = document.getElementById('invited-members-list');
-
-    document.getElementById('add-member-btn').addEventListener('click', async () => {
-      const search = document.getElementById('member-search').value.trim();
-      if (!search) return;
-      try {
-        const res = await apiFetch(`/users/search?q=${encodeURIComponent(search)}`);
-        const users = res.data || [];
-        if (users.length === 0) {
-          showToast('Aucun utilisateur trouvé', 'warning');
-          return;
-        }
-        // On prend le premier résultat
-        const user = users[0];
-        if (!invitedMembers.has(user.id)) {
-          invitedMembers.set(user.id, user.pseudo || user.full_name);
-          renderInvitedMembers();
-          document.getElementById('member-search').value = '';
-        } else {
-          showToast('Ce membre est déjà invité', 'warning');
-        }
-      } catch(e) {
-        showToast('Erreur lors de la recherche', 'error');
-      }
-    });
-
-    function renderInvitedMembers() {
-      membersListEl.innerHTML = '';
-      invitedMembers.forEach((pseudo, id) => {
-        const li = document.createElement('li');
-        li.className = 'flex items-center justify-between bg-gray-50 px-3 py-2 rounded';
-        li.innerHTML = `<span>${escapeHtml(pseudo)}</span> <span class="badge badge-warning">En attente</span> <button type="button" class="text-red-600 ml-2" data-id="${id}">&times;</button>`;
-        membersListEl.appendChild(li);
-      });
-    }
-
-    membersListEl.addEventListener('click', (e) => {
-      if (e.target.tagName === 'BUTTON') {
-        const id = e.target.dataset.id;
-        invitedMembers.delete(id);
-        renderInvitedMembers();
-      }
     });
 
     // Soumission du formulaire
@@ -151,12 +94,12 @@
         max_members: parseInt(document.getElementById('max_members').value),
         start_date: document.getElementById('start_date').value,
         max_absences: parseInt(document.getElementById('max_absences').value) || 1,
-        penalty_amount: parseInt(document.getElementById('penalty').value) || 0,
-        invited_member_ids: Array.from(invitedMembers.keys()) // envoi des membres invités
+        penalty_amount: parseInt(document.getElementById('penalty').value) || 0
       };
       try {
         const res = await apiFetch('/tontines', { method: 'POST', body: JSON.stringify(payload) });
         hideSpinner(btn, 'Créer la tontine');
+        document.getElementById('tontine-id').textContent = res.data.id;
         document.getElementById('invite-code').textContent = res.data.invitation_code;
         document.getElementById('success-modal').classList.remove('hidden');
         window.createdTontineId = res.data.id;
@@ -173,8 +116,6 @@
         window.location.href = 'dashboard-admin.html';
       }
     });
-
-    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
   </script>
 </body>
 </html>

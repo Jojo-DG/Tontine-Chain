@@ -1,6 +1,6 @@
-let accessToken = null;
-let refreshToken = null;
-let currentUser = null;
+let accessToken = localStorage.getItem('tontine_access_token');
+let refreshToken = localStorage.getItem('tontine_refresh_token');
+let currentUser = JSON.parse(localStorage.getItem('tontine_user') || 'null');
 
 async function login(phone, password) {
   const res = await fetch(`${CONFIG.API_BASE_URL}/auth/login`, {
@@ -10,10 +10,15 @@ async function login(phone, password) {
   });
   const data = await res.json();
   if (!data.success) throw { code: data.error.code, message: data.error.message };
+  
   accessToken = data.data.access_token;
   refreshToken = data.data.refresh_token;
   currentUser = data.data.user;
-  // Mettre à jour meta user-role
+  
+  localStorage.setItem('tontine_access_token', accessToken);
+  localStorage.setItem('tontine_refresh_token', refreshToken);
+  localStorage.setItem('tontine_user', JSON.stringify(currentUser));
+  
   document.querySelector('meta[name="user-role"]')?.setAttribute('content', currentUser.role);
   return data.data;
 }
@@ -38,8 +43,13 @@ async function refreshAccessToken() {
   });
   const data = await res.json();
   if (!data.success) throw { code: data.error.code, message: data.error.message };
+  
   accessToken = data.data.access_token;
-  refreshToken = data.data.refresh_token; // rotation
+  refreshToken = data.data.refresh_token;
+  
+  localStorage.setItem('tontine_access_token', accessToken);
+  localStorage.setItem('tontine_refresh_token', refreshToken);
+  
   return data.data;
 }
 
@@ -54,9 +64,14 @@ async function logout() {
       body: JSON.stringify({ refresh_token: refreshToken })
     });
   } catch(e) {}
+  
   accessToken = null;
   refreshToken = null;
   currentUser = null;
+  localStorage.removeItem('tontine_access_token');
+  localStorage.removeItem('tontine_refresh_token');
+  localStorage.removeItem('tontine_user');
+  
   window.location.href = 'connexion.html';
 }
 

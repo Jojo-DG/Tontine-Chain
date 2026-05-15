@@ -25,137 +25,84 @@
     </div>
 
     <div id="content" class="hidden space-y-6">
-      <!-- Compte Épargne -->
-      <div class="bg-white rounded-xl p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-semibold text-lg flex items-center gap-2"><i data-lucide="piggy-bank" class="w-5 h-5 text-[--accent]"></i> Compte Épargne</h3>
-          <span class="badge badge-success">Actif</span>
+      <!-- Polygon Wallet -->
+      <div class="bg-[--primary] text-white rounded-xl p-8 shadow-lg relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-4 opacity-20">
+          <i data-lucide="wallet" class="w-24 h-24"></i>
         </div>
-        <div class="text-3xl font-bold mb-4" id="savings-balance">— XOF</div>
-        <div class="flex gap-2">
-          <button id="recharge-btn" class="btn-outline text-sm">Recharger</button>
-          <button id="transfer-btn" class="btn-outline text-sm">Transférer</button>
-          <button id="withdraw-btn" class="btn-outline text-sm">Retirer</button>
-        </div>
-      </div>
-
-      <!-- Compte Dépenses -->
-      <div class="bg-white rounded-xl p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-semibold text-lg flex items-center gap-2"><i data-lucide="credit-card" class="w-5 h-5 text-[--accent]"></i> Compte Dépenses</h3>
-          <span class="badge badge-info">Courant</span>
-        </div>
-        <div class="text-3xl font-bold mb-4" id="expense-balance">— XOF</div>
-        <p class="text-sm text-gray-500">Utilisé pour les cotisations automatiques</p>
-      </div>
-
-      <!-- Adresse wallet (secondaire) -->
-      <div class="bg-white rounded-xl p-4 text-sm text-gray-600">
-        <span class="font-medium">Wallet blockchain :</span>
-        <span id="wallet-address" class="font-mono">—</span>
-        <a id="polygon-link" href="#" target="_blank" class="text-[--accent] ml-2">Voir sur Polygonscan</a>
-      </div>
-    </div>
-
-    <!-- Modal actions (recharge/transfert/retrait) -->
-    <div id="action-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-xl p-6 max-w-md w-full">
-        <h3 id="modal-title" class="text-lg font-bold mb-4">Recharger</h3>
-        <form id="action-form" class="space-y-4">
-          <input type="number" id="action-amount" placeholder="Montant en XOF" class="w-full border rounded-lg px-3 py-2" required>
-          <div id="action-source" class="hidden">
-            <label class="block text-sm mb-1">Depuis</label>
-            <select id="source-account" class="w-full border rounded-lg px-3 py-2">
-              <option value="savings">Compte Épargne</option>
-              <option value="expense">Compte Dépenses</option>
-            </select>
+        <div class="relative z-10">
+          <p class="text-white/70 text-sm mb-1">Solde Polygon (Mumbai)</p>
+          <div class="text-4xl font-bold mb-4" id="matic-balance">0.00 MATIC</div>
+          <div class="space-y-1">
+            <p class="text-xs text-white/60">Adresse du wallet</p>
+            <div class="flex items-center gap-2">
+              <code id="wallet-address" class="bg-white/10 px-2 py-1 rounded text-xs">0x...</code>
+              <button onclick="copyAddress()" class="hover:text-[--accent]"><i data-lucide="copy" class="w-4 h-4"></i></button>
+            </div>
           </div>
-          <button type="submit" class="btn-primary w-full">Valider</button>
-          <button type="button" id="close-modal" class="btn-outline w-full">Annuler</button>
-        </form>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl p-6 border">
+          <h3 class="font-semibold mb-2">Recharger</h3>
+          <p class="text-sm text-gray-500 mb-4">Ajoutez des fonds via Mobile Money pour vos cotisations.</p>
+          <button onclick="showToast('Bientôt disponible via FedaPay', 'info')" class="btn-primary w-full">Recharger via Mobile Money</button>
+        </div>
+        <div class="bg-white rounded-xl p-6 border">
+          <h3 class="font-semibold mb-2">Polygonscan</h3>
+          <p class="text-sm text-gray-500 mb-4">Consultez vos transactions sur l'explorateur de blocs.</p>
+          <a id="polygon-link" href="#" target="_blank" class="btn-outline w-full block text-center">Voir mes transactions</a>
+        </div>
       </div>
     </div>
   </main>
 
   <script>
-    let accountsData = null;
     (async () => {
       try {
-        const [userData, accountsRes] = await Promise.all([
-          apiFetch('/users/me'),
-          apiFetch('/wallets/fcfa/accounts') // endpoint supposé pour les comptes FCFA
-        ]);
+        const res = await apiFetch('/wallets/balance');
         document.getElementById('loading').remove();
         document.getElementById('content').classList.remove('hidden');
 
-        const u = userData.data;
-        document.getElementById('wallet-address').textContent = shortAddress(u.wallet_address);
-        document.getElementById('polygon-link').href = addressLink(u.wallet_address);
-
-        accountsData = accountsRes.data;
-        document.getElementById('savings-balance').textContent = formatMontant(accountsData.savings_balance);
-        document.getElementById('expense-balance').textContent = formatMontant(accountsData.expense_balance);
+        const w = res.data;
+        document.getElementById('matic-balance').textContent = `${parseFloat(w.balance_matic).toFixed(4)} MATIC`;
+        document.getElementById('wallet-address').textContent = w.wallet_address;
+        document.getElementById('polygon-link').href = `${CONFIG.POLYGONSCAN_URL}/address/${w.wallet_address}`;
       } catch(e) {
-        showToast(e.message, 'error');
+        if (e.message.includes('Aucun wallet')) {
+          document.getElementById('loading').innerHTML = `
+            <div class="bg-white p-8 rounded-xl text-center shadow-sm">
+              <i data-lucide="alert-circle" class="w-12 h-12 text-[--warning] mx-auto mb-4"></i>
+              <h3 class="text-lg font-bold">Aucun wallet trouvé</h3>
+              <p class="text-gray-600 mb-6">Vous devez créer un wallet pour commencer à utiliser Tontine Chain.</p>
+              <button id="create-wallet-btn" class="btn-primary">Créer mon wallet Polygon</button>
+            </div>`;
+          document.getElementById('create-wallet-btn').addEventListener('click', createWallet);
+        } else {
+          showToast(e.message, 'error');
+        }
       }
     })();
 
-    const modal = document.getElementById('action-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const actionForm = document.getElementById('action-form');
-    const actionSource = document.getElementById('action-source');
-    let currentAction = '';
-
-    document.getElementById('recharge-btn').addEventListener('click', () => openModal('recharge'));
-    document.getElementById('transfer-btn').addEventListener('click', () => openModal('transfer'));
-    document.getElementById('withdraw-btn').addEventListener('click', () => openModal('withdraw'));
-    document.getElementById('close-modal').addEventListener('click', () => modal.classList.add('hidden'));
-
-    function openModal(action) {
-      currentAction = action;
-      if (action === 'recharge') {
-        modalTitle.textContent = 'Recharger le compte Épargne';
-        actionSource.classList.add('hidden');
-      } else if (action === 'transfer') {
-        modalTitle.textContent = 'Transférer entre comptes';
-        actionSource.classList.remove('hidden');
-      } else if (action === 'withdraw') {
-        modalTitle.textContent = 'Retirer vers Mobile Money';
-        actionSource.classList.add('hidden');
-      }
-      actionForm.reset();
-      modal.classList.remove('hidden');
-    }
-
-    actionForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const amount = parseInt(document.getElementById('action-amount').value);
-      if (!amount || amount <= 0) return showToast('Montant invalide', 'error');
-      const btn = actionForm.querySelector('button[type="submit"]');
+    async function createWallet() {
+      const btn = document.getElementById('create-wallet-btn');
       showSpinner(btn);
       try {
-        let endpoint, payload;
-        if (currentAction === 'recharge') {
-          endpoint = '/wallets/fcfa/recharge';
-          payload = { amount };
-        } else if (currentAction === 'transfer') {
-          const source = document.getElementById('source-account').value;
-          endpoint = '/wallets/fcfa/transfer';
-          payload = { amount, from: source, to: source === 'savings' ? 'expense' : 'savings' };
-        } else if (currentAction === 'withdraw') {
-          endpoint = '/wallets/fcfa/withdraw';
-          payload = { amount };
-        }
-        await apiFetch(endpoint, { method: 'POST', body: JSON.stringify(payload) });
-        hideSpinner(btn, 'Valider');
-        showToast('Opération réussie', 'success');
-        modal.classList.add('hidden');
+        await apiFetch('/wallets/create', { method: 'POST' });
+        showToast('Wallet créé avec succès !', 'success');
         location.reload();
-      } catch(err) {
-        hideSpinner(btn, 'Valider');
-        showToast(err.message, 'error');
+      } catch(e) {
+        hideSpinner(btn, 'Créer mon wallet Polygon');
+        showToast(e.message, 'error');
       }
-    });
+    }
+
+    function copyAddress() {
+      const addr = document.getElementById('wallet-address').textContent;
+      navigator.clipboard.writeText(addr);
+      showToast('Adresse copiée !', 'success');
+    }
   </script>
 </body>
 </html>
