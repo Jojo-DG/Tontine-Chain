@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tontine Chain - Presentation MVP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --accent: #10B981;
+            --dark: #0F172A;
+        }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--dark);
+            color: white;
+            overflow: hidden;
+            margin: 0;
+        }
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('tontine_chain_hero_bg_1778889789166.png') no-repeat center center;
+            background-size: cover;
+            filter: brightness(0.4);
+            z-index: -1;
+        }
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            padding: 2rem;
+        }
+        .slide.active {
+            opacity: 1;
+            transform: translateY(0);
+            z-index: 10;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+        }
+        .title-gradient {
+            background: linear-gradient(to right, #60A5FA, #34D399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: var(--primary);
+            transition: width 0.5s ease;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-overlay"></div>
+    <div class="progress-bar" id="progress"></div>
+
+    <!-- Slide 1: Intro -->
+    <div class="slide active" id="slide-1">
+        <div class="glass p-12 max-w-3xl">
+            <div class="flex justify-center mb-8">
+                <div class="bg-blue-600 p-4 rounded-2xl shadow-xl shadow-blue-500/20 floating">
+                    <i data-lucide="layers" class="w-16 h-16 text-white"></i>
+                </div>
+            </div>
+            <h1 class="text-6xl font-extrabold mb-4">Tontine <span class="title-gradient">Chain</span></h1>
+            <p class="text-xl text-gray-300 font-light tracking-wide">L'épargne collective réinventée sur la Blockchain</p>
+        </div>
+    </div>
+
+    <!-- Slide 2: The Problem -->
+    <div class="slide" id="slide-2">
+        <div class="max-w-4xl">
+            <h2 class="text-4xl font-bold mb-12">Les tontines traditionnelles ?</h2>
+            <div class="grid grid-cols-3 gap-8">
+                <div class="glass p-8">
+                    <i data-lucide="shield-off" class="w-12 h-12 text-red-400 mb-4 mx-auto"></i>
+                    <h3 class="font-bold mb-2">Manque de confiance</h3>
+                    <p class="text-sm text-gray-400">Risques de fraude et détournements fréquents.</p>
+                </div>
+                <div class="glass p-8">
+                    <i data-lucide="eye-off" class="w-12 h-12 text-orange-400 mb-4 mx-auto"></i>
+                    <h3 class="font-bold mb-2">Opacité totale</h3>
+                    <p class="text-sm text-gray-400">Pas de traçabilité réelle des fonds collectés.</p>
+                </div>
+                <div class="glass p-8">
+                    <i data-lucide="alert-triangle" class="w-12 h-12 text-yellow-400 mb-4 mx-auto"></i>
+                    <h3 class="font-bold mb-2">Instabilité</h3>
+                    <p class="text-sm text-gray-400">Aucun historique de crédit pour les membres.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: The Solution -->
+    <div class="slide" id="slide-3">
+        <div class="glass p-12 max-w-4xl border-blue-500/30">
+            <h2 class="text-4xl font-bold mb-8">La Puissance de la <span class="title-gradient">Blockchain</span></h2>
+            <div class="grid grid-cols-2 gap-12 text-left">
+                <div class="flex gap-4">
+                    <div class="bg-green-500/20 p-3 rounded-lg h-fit"><i data-lucide="check-circle" class="text-green-400"></i></div>
+                    <div>
+                        <h4 class="font-bold text-xl">Smart Contracts</h4>
+                        <p class="text-gray-400">Distribution automatique et inviolable des gains sur Polygon.</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="bg-blue-500/20 p-3 rounded-lg h-fit"><i data-lucide="eye" class="text-blue-400"></i></div>
+                    <div>
+                        <h4 class="font-bold text-xl">Transparence</h4>
+                        <p class="text-gray-400">Chaque transaction est inscrite sur le registre public.</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="bg-purple-500/20 p-3 rounded-lg h-fit"><i data-lucide="wallet" class="text-purple-400"></i></div>
+                    <div>
+                        <h4 class="font-bold text-xl">Paiement Mobile</h4>
+                        <p class="text-gray-400">Intégration FedaPay pour des cotisations simples par MM.</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="bg-yellow-500/20 p-3 rounded-lg h-fit"><i data-lucide="trending-up" class="text-yellow-400"></i></div>
+                    <div>
+                        <h4 class="font-bold text-xl">Scoring de Crédit</h4>
+                        <p class="text-gray-400">Bâtissez votre réputation on-chain pour le futur.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Features / Tech Stack -->
+    <div class="slide" id="slide-4">
+        <h2 class="text-3xl font-bold mb-8">Technologie de Pointe</h2>
+        <div class="flex gap-12 items-center">
+            <div class="text-center">
+                <div class="w-32 h-32 glass flex items-center justify-center mb-4 mx-auto">
+                    <img src="https://cryptologos.cc/logos/polygon-matic-logo.png" class="w-16 h-16" alt="Polygon">
+                </div>
+                <p class="font-bold">Polygon</p>
+                <p class="text-xs text-gray-400">Réseau Rapide & Eco</p>
+            </div>
+            <div class="text-center">
+                <div class="w-32 h-32 glass flex items-center justify-center mb-4 mx-auto">
+                    <i data-lucide="smartphone" class="w-16 h-16 text-blue-400"></i>
+                </div>
+                <p class="font-bold">FedaPay</p>
+                <p class="text-xs text-gray-400">Mobile Money Afrique</p>
+            </div>
+            <div class="text-center">
+                <div class="w-32 h-32 glass flex items-center justify-center mb-4 mx-auto">
+                    <i data-lucide="shield-check" class="w-16 h-16 text-green-400"></i>
+                </div>
+                <p class="font-bold">NestJS</p>
+                <p class="text-xs text-gray-400">Backend Robuste</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: CTA -->
+    <div class="slide" id="slide-5">
+        <div class="glass p-16 border-green-500/30">
+            <h2 class="text-5xl font-black mb-6">Prêt pour le futur ?</h2>
+            <p class="text-xl text-gray-400 mb-10">L'épargne collaborative sans frontières et sans fraude.</p>
+            <div class="flex gap-4 justify-center">
+                <div class="px-8 py-4 bg-blue-600 rounded-full font-bold text-lg hover:bg-blue-700 transition cursor-pointer">
+                    Lancer le MVP
+                </div>
+                <div class="px-8 py-4 bg-white/10 rounded-full font-bold text-lg hover:bg-white/20 transition cursor-pointer">
+                    Voir le code
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        let currentSlide = 1;
+        const totalSlides = 5;
+        const slideDuration = 4000; // 4 secondes par slide
+
+        function nextSlide() {
+            document.getElementById(`slide-${currentSlide}`).classList.remove('active');
+            currentSlide = (currentSlide % totalSlides) + 1;
+            document.getElementById(`slide-${currentSlide}`).classList.add('active');
+            
+            document.getElementById('progress').style.width = `${(currentSlide / totalSlides) * 100}%`;
+
+            if (currentSlide === 1) {
+                // Arrêt après un cycle pour l'enregistrement ou boucle ?
+                // Pour une vidéo de présentation, on peut boucler ou s'arrêter.
+            }
+        }
+
+        setInterval(nextSlide, slideDuration);
+        document.getElementById('progress').style.width = `${(1 / totalSlides) * 100}%`;
+    </script>
+</body>
+</html>

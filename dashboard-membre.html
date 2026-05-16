@@ -16,69 +16,174 @@
   <script src="assets/js/layout.js"></script>
 </head>
 <body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
-  <main class="p-6 max-w-6xl mx-auto">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold">Mes tontines</h1>
-      <a href="rejoindre.html" class="btn-outline flex items-center gap-2"><i data-lucide="plus-circle" class="w-5 h-5"></i> Rejoindre une tontine</a>
-    </div>
-
-    <div id="tontines-container">
-      <div class="grid md:grid-cols-2 gap-4" id="skeleton-grid">
-        <div class="bg-white rounded-xl p-6 skeleton h-48"></div>
+  <main class="p-6 max-w-6xl mx-auto space-y-8">
+    <!-- Stats Summary Bar -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div class="bg-blue-50 p-3 rounded-xl text-blue-600"><i data-lucide="wallet" class="w-6 h-6"></i></div>
+        <div>
+          <p class="text-xs text-gray-500 uppercase tracking-wider">Solde Polygon</p>
+          <p class="text-xl font-bold text-gray-800" id="stat-balance">0.00 MATIC</p>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div class="bg-green-50 p-3 rounded-xl text-green-600"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
+        <div>
+          <p class="text-xs text-gray-500 uppercase tracking-wider">Score de fiabilité</p>
+          <p class="text-xl font-bold text-gray-800" id="stat-score">98%</p>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div class="bg-amber-50 p-3 rounded-xl text-amber-600"><i data-lucide="calendar" class="w-6 h-6"></i></div>
+        <div>
+          <p class="text-xs text-gray-500 uppercase tracking-wider">Échéances ce mois</p>
+          <p class="text-xl font-bold text-gray-800" id="stat-pending">0</p>
+        </div>
       </div>
     </div>
-    <div id="empty-state" class="hidden text-center py-16">
-      <i data-lucide="users" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
-      <p class="text-gray-500 mb-4">Vous n'avez pas encore rejoint de tontine.</p>
-      <a href="rejoindre.html" class="btn-primary">Rejoindre une tontine</a>
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-r from-[#0A1F44] to-[#1e3a8a] rounded-2xl p-8 mb-8 text-white shadow-lg relative overflow-hidden">
+      <!-- Décoration d'arrière-plan -->
+      <div class="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white opacity-5 rounded-full blur-2xl"></div>
+      <div class="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-[#16A34A] opacity-20 rounded-full blur-xl"></div>
+      
+      <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold mb-2" id="welcome-message">Bonjour !</h1>
+          <p class="text-blue-200 text-sm md:text-base">Voici un aperçu de vos tontines en cours et de vos prochaines échéances.</p>
+        </div>
+        <a href="rejoindre.html" class="bg-white text-[#0A1F44] px-6 py-3 rounded-xl font-semibold flex items-center gap-2 hover:bg-gray-100 transition shadow-md">
+          <i data-lucide="plus-circle" class="w-5 h-5"></i> Rejoindre une tontine
+        </a>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Mes tontines actives</h2>
+    </div>
+
+    <div id="loading-state" class="text-center py-12">
+      <div class="spinner border-blue-600 border-4 w-12 h-12 mx-auto mb-4"></div>
+      <p class="text-gray-500">Chargement de votre univers Tontine...</p>
+    </div>
+
+    <div id="tontines-container" class="hidden"></div>
+    
+    <div id="empty-state" class="hidden text-center py-16 bg-white rounded-3xl shadow-sm border border-dashed border-gray-300">
+      <div class="max-w-md mx-auto">
+        <div class="bg-blue-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <i data-lucide="compass" class="w-10 h-10 text-blue-600"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-800 mb-3">Prêt à épargner ?</h3>
+        <p class="text-gray-500 mb-8 leading-relaxed">Vous n'avez pas encore rejoint de tontine. C'est le moment idéal pour commencer à bâtir votre réputation financière sur la blockchain.</p>
+        <div class="flex flex-col gap-3">
+          <a href="rejoindre.html" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition">Trouver une tontine</a>
+          <a href="portefeuille.html" class="text-blue-600 font-semibold py-2">Approvisionner mon compte</a>
+        </div>
+      </div>
     </div>
   </main>
 
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    async function loadDashboard() {
+      const loading = document.getElementById('loading-state');
       const container = document.getElementById('tontines-container');
-      const skeleton = document.getElementById('skeleton-grid');
       const empty = document.getElementById('empty-state');
+      
+      loading.classList.remove('hidden');
+      container.classList.add('hidden');
+      empty.classList.add('hidden');
+
       try {
-        const allData = await apiFetch('/tontines');
-        skeleton.remove();
-        const tontines = allData.data || [];
+        // 1. Stats utilisateur (Nom)
+        const user = JSON.parse(localStorage.getItem('tontine_user') || '{}');
+        if (user.full_name) {
+          document.getElementById('welcome-message').textContent = `Bonjour, ${user.full_name.split(' ')[0]} 👋`;
+        }
+
+        // 2. Récupération parallèle du solde et des tontines pour plus de rapidité
+        const [tontinesRes, walletRes] = await Promise.all([
+          apiFetch('/tontines'),
+          apiFetch('/wallets/balance').catch(() => ({ data: { balance_matic: 0 } }))
+        ]);
+
+        const tontines = tontinesRes.data || [];
+        const wallet = walletRes.data || { balance_matic: 0 };
+        
+        // Mise à jour des compteurs
+        document.getElementById('stat-balance').textContent = `${parseFloat(wallet.balance_matic).toFixed(3)} MATIC`;
+        document.getElementById('stat-pending').textContent = tontines.filter(t => t.my_contribution_status === 'PENDING').length;
+        
+        loading.classList.add('hidden');
+        
         if (tontines.length === 0) {
           empty.classList.remove('hidden');
         } else {
+          container.classList.remove('hidden');
           renderMemberTontines(tontines, container);
         }
       } catch (err) {
-        skeleton.remove();
-        showBanner(container, err.message, 'error');
+        loading.classList.add('hidden');
+        showBanner(document.querySelector('main'), `<strong>Oups !</strong> ${getFriendlyMessage(err)}`, 'error');
+        
+        // Bouton de retry
+        const retryBtn = document.createElement('button');
+        retryBtn.className = 'btn-outline mx-auto block mt-4';
+        retryBtn.textContent = 'Réessayer la connexion';
+        retryBtn.onclick = () => window.location.reload();
+        document.querySelector('main').appendChild(retryBtn);
       }
-    });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDashboard);
 
     function renderMemberTontines(tontines, container) {
-      container.innerHTML = '<div class="grid md:grid-cols-2 gap-4"></div>';
+      container.innerHTML = '<div class="grid lg:grid-cols-2 gap-6"></div>';
       const grid = container.querySelector('.grid');
       tontines.forEach(t => {
         const card = document.createElement('div');
-        card.className = 'bg-white rounded-xl p-6 shadow-sm';
+        card.className = 'bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group';
         const paid = t.my_contribution_status === 'PAID';
+        
+        // Effet visuel sur le bord
+        const borderIndicator = `<div class="absolute left-0 top-0 bottom-0 w-1 ${paid ? 'bg-green-500' : 'bg-amber-500'}"></div>`;
+
         card.innerHTML = `
-          <div class="flex justify-between items-start mb-3">
-            <h3 class="font-semibold text-lg">${escapeHtml(t.name)}</h3>
-            <span class="badge ${paid ? 'badge-success' : 'badge-warning'}">${paid ? 'Payé' : 'Impayé'}</span>
+          ${borderIndicator}
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="font-bold text-xl text-gray-800 mb-1 group-hover:text-blue-600 transition-colors">${escapeHtml(t.name)}</h3>
+              <p class="text-sm text-gray-500 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Fréquence : ${t.frequency}</p>
+            </div>
+            <span class="badge ${paid ? 'badge-success' : 'badge-warning'} px-3 py-1 shadow-sm">${paid ? '<i data-lucide="check" class="w-3 h-3 mr-1 inline"></i> Cotisation payée' : '<i data-lucide="alert-circle" class="w-3 h-3 mr-1 inline"></i> En attente'}</span>
           </div>
-          ${!paid && t.penalty ? `<div class="flex items-center gap-1 text-red-600 text-sm mb-2"><i data-lucide="alert-circle" class="w-4 h-4"></i> Pénalité : ${formatMontant(t.penalty)}</div>` : ''}
-          <div class="text-sm space-y-1 mb-3">
-            <div>Fréquence : ${t.frequency} | Membres : ${t.members_confirmed || 0}/${t.max_members}</div>
-            <div>Prochaine échéance : ${t.current_cycle?.deadline ? countdown(t.current_cycle.deadline) : '—'}</div>
-            <div>Bénéficiaire : <strong>${t.current_cycle?.beneficiary?.full_name || '—'}</strong></div>
-            <div>${t.contributions_confirmed || 0}/${t.contributions_total || 0} membres ont payé</div>
+          
+          ${!paid && t.penalty ? `<div class="bg-red-50 border border-red-100 rounded-lg p-3 flex items-center gap-2 text-red-700 text-sm mb-4"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Pénalité de retard : <span class="font-bold">${formatMontant(t.penalty)}</span></div>` : ''}
+          
+          <div class="grid grid-cols-2 gap-4 mb-5">
+            <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+              <p class="text-xs text-gray-500 mb-1 uppercase tracking-wider">Prochaine échéance</p>
+              <p class="font-semibold text-gray-800">${t.current_cycle?.deadline ? countdown(t.current_cycle.deadline) : '—'}</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+              <p class="text-xs text-gray-500 mb-1 uppercase tracking-wider">Bénéficiaire actuel</p>
+              <p class="font-semibold text-gray-800 truncate">${t.current_cycle?.beneficiary?.full_name || '—'}</p>
+            </div>
           </div>
-          <div class="bg-gray-200 rounded-full h-2 mb-4">
-            <div class="bg-[--accent] h-2 rounded-full" style="width:${t.contributions_total ? (t.contributions_confirmed/t.contributions_total*100) : 0}%"></div>
+
+          <div class="mb-5">
+            <div class="flex justify-between text-sm mb-2">
+              <span class="text-gray-600 font-medium">Progression du cycle</span>
+              <span class="font-bold text-gray-800">${t.contributions_confirmed || 0}/${t.contributions_total || 0} paiements</span>
+            </div>
+            <div class="bg-gray-100 rounded-full h-2.5 overflow-hidden">
+              <div class="bg-gradient-to-r from-blue-500 to-teal-400 h-2.5 rounded-full transition-all duration-1000" style="width:${t.contributions_total ? (t.contributions_confirmed/t.contributions_total*100) : 0}%"></div>
+            </div>
           </div>
-          <div class="flex gap-2">
-            <a href="tontine.html?id=${t.id}" class="btn-outline text-sm">Voir le détail</a>
-            ${!paid ? `<a href="paiement.html?cycle_id=${t.current_cycle?.id || ''}" class="btn-primary text-sm">Payer ma cotisation</a>` : ''}
+          
+          <div class="flex gap-3 mt-auto pt-4 border-t border-gray-50">
+            <a href="tontine.html?id=${t.id}" class="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 text-center py-2.5 rounded-xl font-medium transition-colors text-sm">Détails</a>
+            ${!paid ? `<a href="paiement.html?cycle_id=${t.current_cycle?.id || ''}" class="flex-1 bg-[#16A34A] hover:bg-green-600 text-white text-center py-2.5 rounded-xl font-medium transition-colors shadow-sm shadow-green-500/20 text-sm">Payer maintenant</a>` : ''}
           </div>
         `;
         grid.appendChild(card);

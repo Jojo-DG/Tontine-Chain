@@ -9,35 +9,45 @@ async function apiFetch(endpoint, options = {}) {
   }
 
   try {
-    let response = await fetch(`${CONFIG.API_BASE_URL}${endpoint}`, {
+    const response = await fetch(`${CONFIG.API_BASE_URL}${endpoint}`, {
       ...options,
       headers
     });
 
-    if (response.status === 401 && typeof refreshAccessToken === 'function') {
-      try {
-        await refreshAccessToken();
-        headers['Authorization'] = `Bearer ${accessToken}`;
-        response = await fetch(`${CONFIG.API_BASE_URL}${endpoint}`, { ...options, headers });
-      } catch (e) {
+    // 401 : Session expirée ou non autorisée
+    if (response.status === 401) {
+      if (typeof refreshAccessToken === 'function' && !options._isRetry) {
+        try {
+          await refreshAccessToken();
+          return apiFetch(endpoint, { ...options, _isRetry: true });
+        } catch (e) {
+          logout();
+          throw { code: 'SESSION_EXPIRED', message: 'Votre session a expiré. Veuillez vous reconnecter.' };
+        }
+      } else {
         logout();
-        throw new Error('Session expirée');
+        throw { code: 'UNAUTHORIZED', message: 'Veuillez vous connecter pour accéder à cette page.' };
       }
     }
 
     const data = await response.json().catch(() => ({}));
+
     if (!response.ok) {
-      let msg = data.message || 'Erreur inattendue';
-      if (Array.isArray(msg)) msg = msg[0];
-      throw { code: data.error || 'API_ERROR', message: msg };
+      let msg = data.message || 'Une erreur inattendue est survenue.';
+      if (Array.isArray(msg)) msg = msg[0]; // Prend la première erreur de validation
+      throw { code: data.error || 'API_ERROR', message: msg, status: response.status };
     }
     
-    // Si l'API renvoie { data: ... }, on retourne ça, sinon on enveloppe dans { data: data } pour rester compatible avec le code existant qui fait res.data
-    if (data && data.data !== undefined) return data;
-    return { data };
+    // Normalise le retour pour toujours avoir .data
+    return data && data.data !== undefined ? data : { data };
     
   } catch (err) {
-    if (err.code) throw err; // métier
-    throw { code: 'NETWORK_ERROR', message: 'Problème de connexion au serveur' };
+    if (err.code) throw err;
+    
+    console.error("Erreur réseau ou serveur :", err);
+    throw { 
+      code: 'NETWORK_ERROR', 
+      message: 'Impossible de joindre le serveur. Vérifiez votre connexion ou réessayez dans quelques instants.' 
+    };
   }
 }

@@ -67,10 +67,8 @@
         else window.location.href = 'dashboard-membre.html';
       } catch (err) {
         hideSpinner(btn, 'Se connecter');
-        const container = document.querySelector('.bg-white');
-        if (err.code === 'INVALID_CREDENTIALS') showBanner(container, 'Numéro ou mot de passe incorrect.', 'error');
-        else if (err.code === 'ACCOUNT_DISABLED') showBanner(container, 'Compte suspendu.', 'error');
-        else showBanner(container, err.message, 'error');
+        const container = document.querySelector('.max-w-md');
+        showBanner(container, getFriendlyMessage(err), 'error');
       }
     });
   </script>
