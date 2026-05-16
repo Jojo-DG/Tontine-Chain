@@ -130,7 +130,7 @@
         window.createdTontineId = res.data.id;
       } catch (err) {
         hideSpinner(btn, 'Créer la tontine');
-        showBanner(document.querySelector('.bg-white'), err.message, 'error');
+        showBanner(document.getElementById('create-form'), err.message, 'error');
       }
     });
 

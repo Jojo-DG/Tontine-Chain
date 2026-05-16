@@ -63,8 +63,7 @@
 
   <script>
     const params = new URLSearchParams(window.location.search);
-    const cycleId = params.get('cycle_id');
-    if (!cycleId) window.location.href = 'dashboard-membre.html';
+    let cycleId = params.get('cycle_id');
 
     function pickPaymentUrl(data) {
       const d = data?.data || data || {};
@@ -104,12 +103,34 @@
     (async () => {
       try {
         const user = await ensureUser().catch(() => null);
+        
+        if (!cycleId) {
+          const res = await apiFetch('/tontines');
+          const pending = (res.data || []).find(t => t.my_contribution_status === 'PENDING' && t.current_cycle);
+          if (pending) {
+            cycleId = pending.current_cycle.id;
+          } else {
+            document.getElementById('loading').innerHTML = `
+              <div class="text-center py-10 bg-white rounded-3xl border border-gray-100 shadow-sm">
+                <div class="bg-emerald-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <i data-lucide="check-circle" class="w-10 h-10 text-accent"></i>
+                </div>
+                <h3 class="text-2xl font-extrabold text-primary mb-2">Tout est en règle !</h3>
+                <p class="text-gray-500 font-medium px-8 mb-8">Vous n'avez aucune cotisation en attente pour le moment.</p>
+                <a href="dashboard-membre.html" class="btn-outline inline-block">Retour au dashboard</a>
+              </div>
+            `;
+            lucide.createIcons();
+            return;
+          }
+        }
+
         const cycle = await loadCycleInfo(cycleId);
-        document.getElementById('loading').remove();
+        document.getElementById('loading').classList.add('hidden');
         document.getElementById('content').classList.remove('hidden');
         document.getElementById('t-name').textContent = cycle.tontine_name;
         document.getElementById('c-number').textContent = cycle.cycle_number;
-        document.getElementById('c-beneficiary').textContent = cycle.beneficiary?.full_name;
+        document.getElementById('c-beneficiary').textContent = cycle.beneficiary?.full_name || 'En attente...';
         document.getElementById('c-amount').textContent = formatMontant(cycle.due_amount);
         document.getElementById('c-deadline').textContent = formatDate(cycle.deadline);
         document.getElementById('pay-amount').textContent = formatMontant(cycle.due_amount).replace(' XOF','');
