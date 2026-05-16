@@ -98,6 +98,10 @@ body.has-app-shell { padding-top: 80px; }
 .app-header__left { display: flex; align-items: center; gap: 14px; }
 .app-header__right { display: flex; align-items: center; gap: 14px; }
 
+@media (min-width: 768px) {
+  #menu-toggle { display: none; }
+}
+
 .notif-dot {
   position: absolute;
   top: 10px;
@@ -195,7 +199,7 @@ body.has-app-shell { padding-top: 80px; }
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at top left, #60A5FA, #1E3A8A);
+  background: radial-gradient(circle at top left, var(--primary-light), var(--primary));
   color: white;
   font-weight: 900;
   border: 2px solid white;
