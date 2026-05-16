@@ -37,10 +37,10 @@
         Polygon
       </span>
 
-      <button class="icon-btn" type="button" aria-label="Notifications">
+      <a href="notifications.html" class="icon-btn" aria-label="Notifications">
         <i data-lucide="bell" class="w-6 h-6"></i>
         <span class="notif-dot" aria-hidden="true"></span>
-      </button>
+      </a>
 
       <span class="app-divider" aria-hidden="true"></span>
 
@@ -62,13 +62,17 @@
   
   const navItems = [
     { href: role === 'ORGANIZER' ? 'dashboard-admin.html' : 'dashboard-membre.html', icon: 'grid', label: 'Dashboard' },
+    { href: 'profil.html', icon: 'user', label: 'Profil' },
     { href: 'portefeuille.html', icon: 'wallet', label: 'Portefeuille' },
+    { href: 'paiement.html', icon: 'credit-card', label: 'Paiement' },
     { href: 'historique.html', icon: 'activity', label: 'Historique' },
     { href: 'notifications.html', icon: 'bell', label: 'Alertes' },
   ];
 
   if (role === 'ORGANIZER') {
     navItems.splice(1, 0, { href: 'creer-tontine.html', icon: 'plus-circle', label: 'Créer une tontine' });
+  } else {
+    navItems.splice(1, 0, { href: 'rejoindre.html', icon: 'users', label: 'Rejoindre' });
   }
 
   let navHTML = `
@@ -79,7 +83,7 @@
   navItems.forEach(item => {
     const isActive = currentPage === item.href;
     navHTML += `
-      <a href="${item.href}" class="nav-link ${isActive ? 'active' : ''}">
+      <a href="${item.href}" class="nav-link ${isActive ? 'active' : ''}" ${isActive ? 'aria-current="page"' : ''}>
         <i data-lucide="${item.icon}" class="w-5 h-5"></i>
         <span>${item.label}</span>
       </a>
@@ -92,7 +96,7 @@
       <div class="sidebar-help">
         <p class="sidebar-help__kicker">Besoin d'aide ?</p>
         <p class="sidebar-help__text">Comprendre les cycles, les échéances et la preuve on-chain.</p>
-        <a href="#" class="sidebar-help__link">Voir le guide</a>
+        <a href="presentation.html" class="sidebar-help__link">Voir le guide</a>
       </div>
       <button id="logout-btn" class="logout-btn" type="button">
         <i data-lucide="log-out" class="w-5 h-5"></i>

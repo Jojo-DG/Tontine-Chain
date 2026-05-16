@@ -628,7 +628,7 @@ table.app-table tbody tr:hover { background: rgba(248, 250, 252, 0.8); }
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: 96px 24px 24px;
 }
 
 .auth-wrap {
@@ -680,4 +680,56 @@ table.app-table tbody tr:hover { background: rgba(248, 250, 252, 0.8); }
 .step-sep {
   color: rgba(255, 255, 255, 0.40);
   font-weight: 900;
+}
+
+.auth-topnav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  background: rgba(10, 31, 68, 0.38);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(12px);
+}
+
+.auth-topnav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  color: white;
+}
+
+.auth-topnav__links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auth-topnav__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  color: rgba(226, 232, 240, 0.92);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.auth-topnav__link:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.16);
 }

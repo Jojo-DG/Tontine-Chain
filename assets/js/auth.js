@@ -1,6 +1,16 @@
-let accessToken = localStorage.getItem('tontine_access_token');
-let refreshToken = localStorage.getItem('tontine_refresh_token');
-let currentUser = JSON.parse(localStorage.getItem('tontine_user') || 'null');
+function safeJsonParse(value, fallback = null) {
+  try {
+    return JSON.parse(value);
+  } catch (_) {
+    return fallback;
+  }
+}
+
+// NOTE: `var` (et non `let`) évite les erreurs TDZ si un autre script
+// touche ces variables globales avant leur initialisation.
+var accessToken = localStorage.getItem('tontine_access_token');
+var refreshToken = localStorage.getItem('tontine_refresh_token');
+var currentUser = safeJsonParse(localStorage.getItem('tontine_user') || 'null', null);
 
 async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
