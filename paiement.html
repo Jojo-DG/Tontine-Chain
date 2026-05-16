@@ -14,32 +14,58 @@
   <script src="assets/js/api.js"></script>
   <script src="assets/js/utils.js"></script>
   <script src="assets/js/blockchain.js"></script>
-  <script src="assets/js/layout.js"></script>
+  <script src="assets/js/layout.js" defer></script>
 </head>
-<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
-  <main class="p-6 max-w-lg mx-auto">
+<body class="bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-2xl mx-auto space-y-6">
+    <div>
+      <h1 class="page-title">Paiement</h1>
+      <p class="page-subtitle">Réglez votre cotisation en quelques secondes via Mobile Money. Vous pourrez ensuite vérifier la confirmation.</p>
+    </div>
+
     <div id="loading" class="skeleton h-64 rounded-xl"></div>
-    <div id="content" class="hidden bg-white rounded-xl shadow p-6 space-y-4">
-      <h1 class="text-xl font-bold">Payer ma cotisation</h1>
-      <div id="cycle-info" class="text-sm space-y-1">
-        <p>Tontine : <strong id="t-name">—</strong></p>
-        <p>Cycle n°<strong id="c-number">—</strong> — Bénéficiaire : <strong id="c-beneficiary">—</strong></p>
-        <p>Montant dû : <strong id="c-amount">—</strong></p>
-        <p>Date limite : <strong id="c-deadline">—</strong></p>
-      </div>
+    <div id="content" class="hidden form-card p-8 space-y-6">
       <div>
-        <label class="block text-sm font-medium mb-1">Numéro Mobile Money</label>
-        <input type="tel" id="mm-phone" class="w-full border rounded-lg px-3 py-2" placeholder="+229..." value="">
+        <h2 class="form-section-title">Payer ma cotisation</h2>
+        <p class="help">Vérifiez les informations du cycle ci-dessous, puis choisissez votre réseau Mobile Money.</p>
       </div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Réseau Mobile Money</label>
-        <select id="mm-network" class="w-full border rounded-lg px-3 py-2">
-          <option value="MTN_MOMO">MTN Mobile Money</option>
-          <option value="MOOV_MONEY">Moov Money</option>
-        </select>
+
+      <div id="cycle-info" class="space-y-2">
+        <div class="premium-card" style="padding:16px;border-radius:18px;">
+          <p class="help" style="margin:0;">
+            <strong>Tontine :</strong> <span id="t-name">—</span><br>
+            <strong>Cycle :</strong> n°<span id="c-number">—</span> — <strong>Bénéficiaire :</strong> <span id="c-beneficiary">—</span><br>
+            <strong>Montant dû :</strong> <span id="c-amount">—</span> — <strong>Date limite :</strong> <span id="c-deadline">—</span>
+          </p>
+        </div>
       </div>
-      <p class="text-xs text-gray-500"><i data-lucide="info" class="inline w-4 h-4"></i> Paiement via CinetPay (MTN MoMo / Moov Money)</p>
-      <button id="pay-btn" class="btn-primary w-full py-2.5">Payer <span id="pay-amount"></span> XOF via Mobile Money</button>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="label" for="mm-phone">Numéro Mobile Money</label>
+          <input type="tel" id="mm-phone" class="input" placeholder="+229 XX XX XX XX" value="">
+          <p class="help">Utilisez le même numéro que votre compte si possible.</p>
+        </div>
+        <div>
+          <label class="label" for="mm-network">Réseau Mobile Money</label>
+          <select id="mm-network" class="select">
+            <option value="MTN_MOMO">MTN Mobile Money</option>
+            <option value="MOOV_MONEY">Moov Money</option>
+          </select>
+          <p class="help">Le paiement s’ouvre dans un onglet CinetPay.</p>
+        </div>
+      </div>
+
+      <div class="premium-card" style="padding:14px;border-radius:18px;background:rgba(16,185,129,0.06);border-color:rgba(16,185,129,0.18);">
+        <p class="help" style="margin:0;">
+          <i data-lucide="info" class="inline w-4 h-4" style="vertical-align:-2px;"></i>
+          Paiement via CinetPay (MTN MoMo / Moov Money). Après paiement, cliquez sur “Vérifier le statut” pour synchroniser.
+        </p>
+      </div>
+
+      <button id="pay-btn" class="btn-primary" style="width:100%;padding-top:14px;padding-bottom:14px;">
+        Payer <span id="pay-amount"></span> XOF via Mobile Money
+      </button>
       <div id="payment-result" class="hidden"></div>
     </div>
   </main>

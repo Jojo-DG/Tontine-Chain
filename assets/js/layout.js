@@ -1,6 +1,4 @@
-// Ce script sera chargé sur chaque page dashboard.
-// Il vérifie l'authentification et injecte le header + sidebar.
-
+// Ce script gère l'injection du layout premium (Header + Sidebar)
 (function() {
   if (!isAuthenticated()) {
     window.location.href = 'connexion.html';
@@ -9,77 +7,127 @@
 
   const role = getRole();
   const user = getUser();
+  const currentPage = window.location.pathname.split('/').pop();
 
-  // Injection du header
+  document.body.classList.add('has-app-shell');
+
+  // Overlay mobile
+  const overlay = document.createElement('div');
+  overlay.className = 'app-overlay';
+  overlay.id = 'app-overlay';
+  document.body.appendChild(overlay);
+
+  // --- Header Injection ---
   const header = document.createElement('header');
-  header.className = 'flex items-center justify-between px-6 h-16 bg-[--primary] text-white fixed top-0 left-0 right-0 z-30';
+  header.className = 'app-header';
   header.innerHTML = `
-    <div class="flex items-center gap-2">
-      <button id="menu-toggle" class="md:hidden p-2"><i data-lucide="menu" class="w-5 h-5"></i></button>
-      <i data-lucide="wallet" class="w-6 h-6 text-[--accent]"></i>
-      <span class="font-bold text-lg">Tontine Chain</span>
+    <div class="app-header__left">
+      <button id="menu-toggle" class="icon-btn" type="button" aria-label="Ouvrir le menu">
+        <i data-lucide="menu" class="w-6 h-6"></i>
+      </button>
+      <a href="${role === 'ORGANIZER' ? 'dashboard-admin.html' : 'dashboard-membre.html'}" class="app-brand">
+        <span class="app-brand__mark"><i data-lucide="layers" class="w-6 h-6"></i></span>
+        <span class="text-primary" style="font-size:18px;">Tontine <span class="text-accent">Chain</span></span>
+      </a>
     </div>
-    <div class="flex items-center gap-4">
-      ${role === 'ORGANIZER' ? `<span class="flex items-center gap-1 text-xs bg-white/20 rounded-full px-3 py-1"><i data-lucide="crown" class="w-4 h-4"></i> Organisateur</span>` : ''}
-      <button id="notif-btn" class="relative"><i data-lucide="bell" class="w-5 h-5"></i><span id="unread-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center hidden">0</span></button>
-      <a href="profil.html" class="p-1"><i data-lucide="settings" class="w-5 h-5"></i></a>
+
+    <div class="app-header__right">
+      <span class="app-chip" aria-label="Réseau actif">
+        <span style="width:10px;height:10px;border-radius:999px;background:var(--accent);display:inline-block;box-shadow:0 0 0 6px rgba(16,185,129,0.12);"></span>
+        Polygon
+      </span>
+
+      <button class="icon-btn" type="button" aria-label="Notifications">
+        <i data-lucide="bell" class="w-6 h-6"></i>
+        <span class="notif-dot" aria-hidden="true"></span>
+      </button>
+
+      <span class="app-divider" aria-hidden="true"></span>
+
+      <a href="profil.html" class="profile-link" aria-label="Accéder au profil">
+        <span class="profile-meta">
+          <span class="profile-name">${user?.full_name || 'Utilisateur'}</span>
+          <span class="profile-role">${role === 'ORGANIZER' ? 'Organisateur' : 'Membre'}</span>
+        </span>
+        <span class="app-avatar">${user?.full_name?.charAt(0) || 'U'}</span>
+      </a>
     </div>
   `;
   document.body.prepend(header);
 
-  // Sidebar navigation
-  const sidebar = document.createElement('nav');
+  // --- Sidebar Injection ---
+  const sidebar = document.createElement('aside');
   sidebar.id = 'sidebar';
-  sidebar.className = 'hidden md:flex flex-col w-64 bg-[--sidebar-bg] border-r border-[--sidebar-border] fixed top-16 bottom-0 left-0 overflow-y-auto z-20';
-  const currentPage = window.location.pathname.split('/').pop();
-
-  const navItems = [];
-  if (role === 'ORGANIZER') {
-    navItems.push({ href: 'creer-tontine.html', icon: 'plus-circle', label: 'Créer une tontine' });
-  }
-  navItems.push(
-    { href: role === 'ORGANIZER' ? 'dashboard-admin.html' : 'dashboard-membre.html', icon: 'home', label: 'Mes tontines' },
+  sidebar.className = 'app-sidebar';
+  
+  const navItems = [
+    { href: role === 'ORGANIZER' ? 'dashboard-admin.html' : 'dashboard-membre.html', icon: 'grid', label: 'Dashboard' },
     { href: 'portefeuille.html', icon: 'wallet', label: 'Portefeuille' },
-    { href: 'historique.html', icon: 'list', label: 'Historique' },
-    { href: 'notifications.html', icon: 'bell', label: 'Notifications' },
-    { href: 'profil.html', icon: 'user', label: 'Mon profil' }
-  );
+    { href: 'historique.html', icon: 'activity', label: 'Historique' },
+    { href: 'notifications.html', icon: 'bell', label: 'Alertes' },
+  ];
 
-  let navHTML = '<div class="p-4 space-y-1 flex flex-col flex-1">';
+  if (role === 'ORGANIZER') {
+    navItems.splice(1, 0, { href: 'creer-tontine.html', icon: 'plus-circle', label: 'Créer une tontine' });
+  }
+
+  let navHTML = `
+    <div class="app-sidebar__nav">
+      <p class="app-sidebar__title">Menu principal</p>
+  `;
+
   navItems.forEach(item => {
     const isActive = currentPage === item.href;
-    navHTML += `<a href="${item.href}" class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${isActive ? 'bg-[--sidebar-active-bg] text-[--sidebar-active-color]' : 'text-gray-700 hover:bg-gray-100'}"><i data-lucide="${item.icon}" class="w-5 h-5"></i> ${item.label}</a>`;
+    navHTML += `
+      <a href="${item.href}" class="nav-link ${isActive ? 'active' : ''}">
+        <i data-lucide="${item.icon}" class="w-5 h-5"></i>
+        <span>${item.label}</span>
+      </a>
+    `;
   });
-  navHTML += `</div>`;
-  navHTML += `<div class="p-4 border-t border-[--sidebar-border]"><button id="logout-btn" class="flex items-center gap-2 text-[--destructive] font-medium w-full"><i data-lucide="log-out" class="w-5 h-5"></i> Déconnexion</button></div>`;
+
+  navHTML += `
+    </div>
+    <div class="app-sidebar__footer">
+      <div class="sidebar-help">
+        <p class="sidebar-help__kicker">Besoin d'aide ?</p>
+        <p class="sidebar-help__text">Comprendre les cycles, les échéances et la preuve on-chain.</p>
+        <a href="#" class="sidebar-help__link">Voir le guide</a>
+      </div>
+      <button id="logout-btn" class="logout-btn" type="button">
+        <i data-lucide="log-out" class="w-5 h-5"></i>
+        Déconnexion
+      </button>
+    </div>
+  `;
+
   sidebar.innerHTML = navHTML;
   document.body.appendChild(sidebar);
 
-  // Mobile drawer
-  const drawer = document.createElement('div');
-  drawer.id = 'mobile-drawer';
-  drawer.className = 'drawer';
-  drawer.innerHTML = navHTML;
-  document.body.appendChild(drawer);
-  const overlay = document.createElement('div');
-  overlay.id = 'menu-overlay';
-  overlay.className = 'overlay';
-  document.body.appendChild(overlay);
-
-  // Event listeners
-  document.getElementById('menu-toggle')?.addEventListener('click', () => {
-    drawer.classList.toggle('open');
-    overlay.classList.toggle('active');
-  });
-  overlay.addEventListener('click', () => {
-    drawer.classList.remove('open');
-    overlay.classList.remove('active');
-  });
-  document.getElementById('logout-btn')?.addEventListener('click', logout);
-  // also bind in drawer
-  drawer.querySelector('#logout-btn')?.addEventListener('click', logout);
-
-  // Mettre à jour le lucide icons après insertion
+  // Initialisation des icônes
   if (window.lucide) lucide.createIcons();
-  document.querySelector('meta[name="user-role"]')?.setAttribute('content', role);
+
+  // Event Listeners
+  document.getElementById('logout-btn')?.addEventListener('click', logout);
+
+  function closeMobileNav() {
+    sidebar.classList.remove('is-open');
+    overlay.classList.remove('is-open');
+  }
+
+  function openMobileNav() {
+    sidebar.classList.add('is-open');
+    overlay.classList.add('is-open');
+  }
+
+  document.getElementById('menu-toggle')?.addEventListener('click', () => {
+    const isOpen = sidebar.classList.contains('is-open');
+    if (isOpen) closeMobileNav();
+    else openMobileNav();
+  });
+
+  overlay.addEventListener('click', closeMobileNav);
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMobileNav();
+  });
 })();

@@ -13,34 +13,42 @@
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/utils.js"></script>
-  <script src="assets/js/layout.js"></script>
+  <script src="assets/js/layout.js" defer></script>
 </head>
-<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
-  <main class="p-6 max-w-5xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Historique</h1>
-    <div class="flex border-b mb-6">
-      <button class="tab-btn px-4 py-2 font-medium border-b-2 border-transparent active" data-tab="contributions">Mes cotisations</button>
-      <button class="tab-btn px-4 py-2 font-medium border-b-2 border-transparent" data-tab="cycles">Par tontine</button>
+<body class="bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-6xl mx-auto space-y-6">
+    <div>
+      <h1 class="page-title">Historique</h1>
+      <p class="page-subtitle">Retrouvez vos cotisations, vos confirmations et les cycles distribués.</p>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Historique">
+      <button class="tab-btn active" data-tab="contributions" type="button" role="tab" aria-selected="true">Mes cotisations</button>
+      <button class="tab-btn" data-tab="cycles" type="button" role="tab" aria-selected="false">Par tontine</button>
     </div>
 
     <div id="tab-contributions" class="tab-content">
       <div class="skeleton h-40 rounded-xl" id="contrib-skeleton"></div>
-      <div class="bg-white rounded-xl p-6 overflow-x-auto hidden" id="contrib-table-container">
-        <table class="w-full text-sm">
-          <thead><tr class="text-left text-gray-500"><th>Tontine</th><th>Cycle</th><th>Montant</th><th>Statut</th><th>Date</th><th>On-chain</th></tr></thead>
+      <div class="table-card hidden" id="contrib-table-container">
+        <div style="overflow:auto;">
+        <table class="app-table">
+          <thead><tr><th>Tontine</th><th>Cycle</th><th>Montant</th><th>Statut</th><th>Date</th><th>On-chain</th></tr></thead>
           <tbody id="contrib-tbody"></tbody>
         </table>
+        </div>
         <div id="pagination-contrib" class="flex justify-center mt-4 gap-2"></div>
       </div>
     </div>
 
     <div id="tab-cycles" class="tab-content hidden">
       <div class="skeleton h-40 rounded-xl" id="cycles-skeleton"></div>
-      <div class="bg-white rounded-xl p-6 overflow-x-auto hidden" id="cycles-table-container">
-        <table class="w-full text-sm">
-          <thead><tr class="text-left text-gray-500"><th>Tontine</th><th>Cycle</th><th>Bénéficiaire</th><th>Montant distribué</th><th>Date</th></tr></thead>
+      <div class="table-card hidden" id="cycles-table-container">
+        <div style="overflow:auto;">
+        <table class="app-table">
+          <thead><tr><th>Tontine</th><th>Cycle</th><th>Bénéficiaire</th><th>Montant distribué</th><th>Date</th></tr></thead>
           <tbody id="cycles-tbody"></tbody>
         </table>
+        </div>
       </div>
     </div>
   </main>
@@ -49,8 +57,12 @@
     let currentTab = 'contributions';
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', function() {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'border-[--accent]', 'text-[--accent]'));
-        this.classList.add('active', 'border-[--accent]', 'text-[--accent]');
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        this.classList.add('active');
+        this.setAttribute('aria-selected', 'true');
         currentTab = this.dataset.tab;
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
         document.getElementById(`tab-${currentTab}`).classList.remove('hidden');

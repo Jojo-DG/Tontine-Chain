@@ -1,108 +1,135 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="user-role" content="">
-  <title>Portefeuille — Tontine Chain</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="assets/css/style.css">
-  <script src="assets/js/config.js"></script>
-  <script src="assets/js/auth.js"></script>
-  <script src="assets/js/api.js"></script>
-  <script src="assets/js/utils.js"></script>
-  <script src="assets/js/blockchain.js"></script>
-  <script src="assets/js/layout.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Portefeuille — Tontine Chain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/utils.js"></script>
 </head>
-<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
-  <main class="p-6 max-w-4xl mx-auto space-y-6">
-    <div id="loading" class="space-y-4">
-      <div class="skeleton h-32 rounded-xl"></div>
-      <div class="skeleton h-32 rounded-xl"></div>
-      <div class="skeleton h-40 rounded-xl"></div>
-    </div>
-
-    <div id="content" class="hidden space-y-6">
-      <!-- Polygon Wallet -->
-      <div class="bg-[--primary] text-white rounded-xl p-8 shadow-lg relative overflow-hidden">
-        <div class="absolute top-0 right-0 p-4 opacity-20">
-          <i data-lucide="wallet" class="w-24 h-24"></i>
-        </div>
-        <div class="relative z-10">
-          <p class="text-white/70 text-sm mb-1">Solde Polygon (Mumbai)</p>
-          <div class="text-4xl font-bold mb-4" id="matic-balance">0.00 MATIC</div>
-          <div class="space-y-1">
-            <p class="text-xs text-white/60">Adresse du wallet</p>
-            <div class="flex items-center gap-2">
-              <code id="wallet-address" class="bg-white/10 px-2 py-1 rounded text-xs">0x...</code>
-              <button onclick="copyAddress()" class="hover:text-[--accent]"><i data-lucide="copy" class="w-4 h-4"></i></button>
+<body class="bg-gray-50 min-h-screen">
+    <main class="p-8 max-w-5xl mx-auto space-y-10 animate-fade-up">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+                <h1 class="text-4xl font-extrabold text-primary tracking-tight">Portefeuille Blockchain</h1>
+                <p class="text-gray-500 font-medium mt-1">Gérez vos actifs sur le réseau Polygon.</p>
             </div>
-          </div>
         </div>
-      </div>
 
-      <div class="grid md:grid-cols-2 gap-4">
-        <div class="bg-white rounded-xl p-6 border">
-          <h3 class="font-semibold mb-2">Recharger</h3>
-          <p class="text-sm text-gray-500 mb-4">Ajoutez des fonds via Mobile Money pour vos cotisations.</p>
-          <button onclick="showToast('Bientôt disponible via FedaPay', 'info')" class="btn-primary w-full">Recharger via Mobile Money</button>
+        <!-- Wallet Card -->
+        <div class="bg-primary rounded-[32px] p-10 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-10">
+            <!-- Cercles décoratifs -->
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-accent opacity-20 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-500 opacity-20 rounded-full blur-3xl"></div>
+            
+            <div class="relative z-10 flex-1 text-center md:text-left">
+                <p class="text-blue-200 text-xs font-bold uppercase tracking-[0.2em] mb-4">Solde Disponible</p>
+                <div class="text-6xl font-extrabold mb-8" id="matic-balance">0.000 <span class="text-2xl text-blue-300">MATIC</span></div>
+                
+                <div class="inline-flex items-center gap-3 bg-white/10 px-5 py-3 rounded-2xl border border-white/10">
+                    <code id="wallet-address" class="text-xs font-bold text-blue-100">Chargement de l'adresse...</code>
+                    <button onclick="copyAddress()" class="hover:text-accent transition">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="relative z-10 w-full md:w-auto grid grid-cols-2 gap-4">
+                <button onclick="showToast('Bientôt : Recharge Mobile Money', 'info')" class="bg-accent text-white p-6 rounded-3xl flex flex-col items-center gap-3 shadow-lg shadow-emerald-500/20 hover:scale-105 transition">
+                    <i data-lucide="arrow-down-circle" class="w-8 h-8"></i>
+                    <span class="font-bold text-sm">Recharger</span>
+                </button>
+                <a id="polygon-link" href="#" target="_blank" class="bg-white/10 text-white p-6 rounded-3xl flex flex-col items-center gap-3 border border-white/20 hover:bg-white/20 transition">
+                    <i data-lucide="external-link" class="w-8 h-8"></i>
+                    <span class="font-bold text-sm">Explorer</span>
+                </a>
+            </div>
         </div>
-        <div class="bg-white rounded-xl p-6 border">
-          <h3 class="font-semibold mb-2">Polygonscan</h3>
-          <p class="text-sm text-gray-500 mb-4">Consultez vos transactions sur l'explorateur de blocs.</p>
-          <a id="polygon-link" href="#" target="_blank" class="btn-outline w-full block text-center">Voir mes transactions</a>
+
+        <!-- Security Info -->
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="premium-card p-8">
+                <div class="bg-blue-50 w-12 h-12 rounded-xl flex items-center justify-center text-blue-600 mb-6">
+                    <i data-lucide="shield" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-primary mb-3">Sécurité Blockchain</h3>
+                <p class="text-gray-500 text-sm leading-relaxed mb-6">
+                    Votre wallet est généré de manière sécurisée. Tontine Chain ne stocke jamais vos clés privées. Vos transactions sont irréversibles sur Polygon.
+                </p>
+                <div class="flex items-center gap-2 text-accent font-bold text-xs uppercase tracking-widest">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    Protégé par Smart Contract
+                </div>
+            </div>
+            <div class="premium-card p-8">
+                <div class="bg-amber-50 w-12 h-12 rounded-xl flex items-center justify-center text-amber-600 mb-6">
+                    <i data-lucide="info" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-primary mb-3">Besoin de MATIC ?</h3>
+                <p class="text-gray-500 text-sm leading-relaxed mb-6">
+                    Le MATIC est nécessaire pour payer les frais de réseau (gas) lors des cotisations. Gardez toujours un solde minimum de 0.1 MATIC.
+                </p>
+                <button class="text-primary font-bold text-xs uppercase tracking-widest hover:underline">
+                    En savoir plus sur les frais →
+                </button>
+            </div>
         </div>
-      </div>
-    </div>
-  </main>
+    </main>
 
-  <script>
-    (async () => {
-      try {
-        const res = await apiFetch('/wallets/balance');
-        document.getElementById('loading').remove();
-        document.getElementById('content').classList.remove('hidden');
+    <script src="assets/js/layout.js" defer></script>
+    <script>
+        (async () => {
+            try {
+                const res = await apiFetch('/wallets/balance');
+                const w = res.data;
+                document.getElementById('matic-balance').innerHTML = `${parseFloat(w.balance_matic).toFixed(4)} <span class="text-2xl text-blue-300">MATIC</span>`;
+                document.getElementById('wallet-address').textContent = w.wallet_address;
+                document.getElementById('polygon-link').href = `${CONFIG.POLYGONSCAN_URL}/address/${w.wallet_address}`;
+            } catch(e) {
+                if (e.message.includes('Aucun wallet')) {
+                    document.querySelector('main').innerHTML += `
+                        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-md z-[60] flex items-center justify-center p-6">
+                            <div class="bg-white rounded-[32px] p-10 max-w-md w-full text-center animate-fade-up">
+                                <div class="bg-amber-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8 text-amber-600">
+                                    <i data-lucide="alert-triangle" class="w-10 h-10"></i>
+                                </div>
+                                <h2 class="text-3xl font-extrabold text-primary mb-4">Initialisation Wallet</h2>
+                                <p class="text-gray-500 mb-8 font-medium">Pour commencer à épargner sur la blockchain, nous devons créer votre coffre-fort numérique personnel.</p>
+                                <button onclick="createWallet()" id="create-btn" class="btn-primary w-full py-4 shadow-xl shadow-emerald-500/20">Créer mon Wallet Polygon</button>
+                            </div>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                } else {
+                    showBanner(document.querySelector('main'), getFriendlyMessage(e), 'error');
+                }
+            }
+        })();
 
-        const w = res.data;
-        document.getElementById('matic-balance').textContent = `${parseFloat(w.balance_matic).toFixed(4)} MATIC`;
-        document.getElementById('wallet-address').textContent = w.wallet_address;
-        document.getElementById('polygon-link').href = `${CONFIG.POLYGONSCAN_URL}/address/${w.wallet_address}`;
-      } catch(e) {
-        if (e.message.includes('Aucun wallet')) {
-          document.getElementById('loading').innerHTML = `
-            <div class="bg-white p-8 rounded-xl text-center shadow-sm">
-              <i data-lucide="alert-circle" class="w-12 h-12 text-[--warning] mx-auto mb-4"></i>
-              <h3 class="text-lg font-bold">Aucun wallet trouvé</h3>
-              <p class="text-gray-600 mb-6">Vous devez créer un wallet pour commencer à utiliser Tontine Chain.</p>
-              <button id="create-wallet-btn" class="btn-primary">Créer mon wallet Polygon</button>
-            </div>`;
-          document.getElementById('create-wallet-btn').addEventListener('click', createWallet);
-        } else {
-          showToast(e.message, 'error');
+        async function createWallet() {
+            const btn = document.getElementById('create-btn');
+            showSpinner(btn);
+            try {
+                await apiFetch('/wallets/create', { method: 'POST' });
+                showToast('Wallet créé avec succès !', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } catch(e) {
+                hideSpinner(btn, 'Créer mon Wallet Polygon');
+                showToast(getFriendlyMessage(e), 'error');
+            }
         }
-      }
-    })();
 
-    async function createWallet() {
-      const btn = document.getElementById('create-wallet-btn');
-      showSpinner(btn);
-      try {
-        await apiFetch('/wallets/create', { method: 'POST' });
-        showToast('Wallet créé avec succès !', 'success');
-        location.reload();
-      } catch(e) {
-        hideSpinner(btn, 'Créer mon wallet Polygon');
-        showToast(e.message, 'error');
-      }
-    }
-
-    function copyAddress() {
-      const addr = document.getElementById('wallet-address').textContent;
-      navigator.clipboard.writeText(addr);
-      showToast('Adresse copiée !', 'success');
-    }
-  </script>
+        function copyAddress() {
+            const addr = document.getElementById('wallet-address').textContent;
+            navigator.clipboard.writeText(addr);
+            showToast('Adresse copiée !', 'success');
+        }
+    </script>
 </body>
 </html>

@@ -13,25 +13,35 @@
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/utils.js"></script>
-  <script src="assets/js/layout.js"></script>
+  <script src="assets/js/layout.js" defer></script>
 </head>
-<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
-  <main class="p-6 max-w-md mx-auto">
-    <div class="bg-white rounded-xl shadow p-8 text-center">
-      <i data-lucide="users" class="w-12 h-12 text-[--accent] mx-auto mb-4"></i>
-      <h1 class="text-2xl font-bold mb-2">Rejoindre une tontine</h1>
-      <p class="text-gray-600 mb-6">Entrez l'identifiant (ID) de la tontine et le code d'invitation.</p>
-      <form id="join-form" class="space-y-4">
+<body class="bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-xl mx-auto space-y-6">
+    <div>
+      <h1 class="page-title">Rejoindre une tontine</h1>
+      <p class="page-subtitle">Saisissez l’ID et le code d’invitation fournis par l’organisateur.</p>
+    </div>
+
+    <div class="form-card p-8">
+      <div class="mb-6">
+        <p class="help">Astuce : l’organisateur peut vous envoyer une capture d’écran depuis son dashboard. Le code est généralement au format <strong>XXXXXXXX</strong>.</p>
+      </div>
+
+      <form id="join-form" class="space-y-5">
         <div>
-          <label class="block text-sm text-left font-medium mb-1">ID de la tontine</label>
-          <input type="text" id="tontine-id" class="w-full border rounded-lg px-3 py-2" placeholder="ID (ex: UUID)" required>
+          <label class="label" for="tontine-id">ID de la tontine</label>
+          <input type="text" id="tontine-id" class="input" placeholder="Ex : 2f1d5b8e-..." required>
+          <p class="help">Identifiant unique (souvent long). Copiez/collez si possible.</p>
         </div>
         <div>
-          <label class="block text-sm text-left font-medium mb-1">Code d'invitation</label>
-          <input type="text" id="invite-code" maxlength="8" class="w-full border rounded-lg px-3 py-3 text-center text-xl tracking-widest uppercase" placeholder="XXXXXXXX" required>
+          <label class="label" for="invite-code">Code d'invitation</label>
+          <input type="text" id="invite-code" maxlength="8" class="input" style="text-align:center;font-size:22px;letter-spacing:0.24em;text-transform:uppercase;" placeholder="XXXXXXXX" required>
+          <p class="help">8 caractères, lettres/chiffres.</p>
         </div>
-        <button type="submit" id="join-btn" class="btn-primary w-full py-2.5">Rejoindre la tontine</button>
+
+        <button type="submit" id="join-btn" class="btn-primary" style="width:100%;padding-top:14px;padding-bottom:14px;">Rejoindre la tontine</button>
       </form>
+
       <div id="result-message" class="mt-4"></div>
     </div>
   </main>

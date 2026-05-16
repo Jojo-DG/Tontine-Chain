@@ -1,112 +1,154 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tontine Chain — La tontine numérique</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="assets/css/style.css">
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    .hero-bg { background: linear-gradient(135deg, #0A1F44 0%, #1a3a6b 100%); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tontine Chain — L'épargne collective sur Blockchain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .hero-gradient {
+            background: radial-gradient(circle at top right, #1e3a8a, #0A1F44);
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
 </head>
-<body>
-  <header class="flex items-center justify-between px-6 h-16 bg-[--primary] text-white">
-    <div class="flex items-center gap-2">
-      <i data-lucide="wallet" class="w-6 h-6 text-[--accent]"></i>
-      <span class="font-bold text-xl">Tontine Chain</span>
-    </div>
-    <div class="hidden md:flex gap-4">
-      <a href="connexion.html" class="btn-outline text-white border-white">Se connecter</a>
-      <a href="inscription.html" class="btn-primary">Créer un compte</a>
-    </div>
-  </header>
+<body class="bg-white text-gray-900">
 
-  <main>
-    <!-- Hero -->
-    <section class="hero-bg text-white py-20 px-6 text-center relative overflow-hidden">
-      <div class="absolute inset-0 bg-black/20" style="background-image: url('https://images.unsplash.com/photo-1739298061766-e2751d92e9db?ixlib=rb-4.0.3&auto=format&fit=crop&w=1500&q=80'); background-size: cover; background-position: center; opacity: 0.2;"></div>
-      <div class="relative z-10 max-w-3xl mx-auto">
-        <h1 class="text-4xl md:text-5xl font-bold mb-4">Tontine Chain – La tontine numérique, transparente et sécurisée</h1>
-        <p class="text-lg text-white/90 mb-8">Gérez vos tontines en toute confiance grâce à la blockchain Polygon et au paiement mobile.</p>
-        <div class="flex flex-wrap gap-4 justify-center">
-          <a href="inscription.html" class="btn-primary text-lg px-8 py-3">Créer un compte</a>
-          <a href="connexion.html" class="btn-outline border-white text-white text-lg px-8 py-3">Se connecter</a>
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 h-20 flex items-center justify-between px-8 md:px-20">
+        <div class="flex items-center gap-3">
+            <div class="bg-primary p-2 rounded-xl shadow-lg shadow-blue-900/20">
+                <i data-lucide="layers" class="w-6 h-6 text-white"></i>
+            </div>
+            <span class="font-extrabold text-2xl tracking-tight text-primary">Tontine <span class="text-accent">Chain</span></span>
         </div>
-      </div>
-    </section>
+        <div class="hidden md:flex items-center gap-10 font-semibold text-gray-600">
+            <a href="#features" class="hover:text-primary transition">Fonctionnalités</a>
+            <a href="#security" class="hover:text-primary transition">Sécurité</a>
+            <a href="#about" class="hover:text-primary transition">À propos</a>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="connexion.html" class="hidden sm:block font-bold text-primary hover:text-accent transition">Se connecter</a>
+            <a href="inscription.html" class="btn-primary">Démarrer gratuitement</a>
+        </div>
+    </nav>
 
-    <!-- Comment ça marche -->
-    <section class="py-16 px-6 max-w-6xl mx-auto">
-      <h2 class="text-3xl font-bold text-center mb-12">Comment ça marche</h2>
-      <div class="grid md:grid-cols-3 gap-8">
-        <div class="text-center p-6 border rounded-xl">
-          <i data-lucide="users" class="w-12 h-12 text-[--accent] mx-auto mb-4"></i>
-          <h3 class="font-semibold text-xl mb-2">Rejoindre ou créer une tontine</h3>
-          <p class="text-gray-600">Inscrivez-vous, choisissez votre profil et démarrez une tontine en quelques clics.</p>
-        </div>
-        <div class="text-center p-6 border rounded-xl">
-          <i data-lucide="shield" class="w-12 h-12 text-[--accent] mx-auto mb-4"></i>
-          <h3 class="font-semibold text-xl mb-2">Cotisez en toute sécurité</h3>
-          <p class="text-gray-600">Payez via MTN Mobile Money ou Moov Money, traçable sur la blockchain.</p>
-        </div>
-        <div class="text-center p-6 border rounded-xl">
-          <i data-lucide="trending-up" class="w-12 h-12 text-[--accent] mx-auto mb-4"></i>
-          <h3 class="font-semibold text-xl mb-2">Recevez la cagnotte à votre tour</h3>
-          <p class="text-gray-600">Le système distribue automatiquement les fonds au bénéficiaire du cycle.</p>
-        </div>
-      </div>
-    </section>
+    <main>
+        <!-- Hero Section -->
+        <section class="hero-gradient pt-40 pb-24 px-8 md:px-20 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-1/2 h-full opacity-10 animate-float">
+                <i data-lucide="blocks" class="w-full h-full text-white"></i>
+            </div>
+            
+            <div class="max-w-4xl relative z-10">
+                <div class="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full mb-8 border border-white/20">
+                    <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+                    <span class="text-xs font-bold uppercase tracking-widest">Nouvelle Génération de Tontine</span>
+                </div>
+                <h1 class="text-5xl md:text-7xl font-extrabold mb-8 leading-tight">
+                    L'épargne collective <br>
+                    <span class="text-accent">enfin transparente.</span>
+                </h1>
+                <p class="text-xl text-blue-100 mb-12 max-w-2xl leading-relaxed">
+                    Rejoignez la première plateforme de tontine basée sur la blockchain Polygon. 
+                    Sécurisez votre argent avec des Smart Contracts et gérez vos cotisations par Mobile Money.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-6">
+                    <a href="inscription.html" class="btn-primary text-center py-4 px-10 text-lg">Créer ma tontine</a>
+                    <a href="#features" class="btn-outline bg-transparent border-white/30 text-white hover:bg-white/10 text-center py-4 px-10 text-lg">Comment ça marche ?</a>
+                </div>
+            </div>
+        </section>
 
-    <!-- Avantages -->
-    <section class="bg-gray-50 py-16 px-6">
-      <div class="max-w-6xl mx-auto">
-        <h2 class="text-3xl font-bold text-center mb-12">Pourquoi Tontine Chain ?</h2>
-        <div class="grid md:grid-cols-2 gap-6">
-          <div class="flex items-start gap-3"><i data-lucide="check-circle-2" class="w-6 h-6 text-[--accent] mt-1"></i><div><strong>Transparence blockchain Polygon</strong><p class="text-gray-600">Toutes les transactions sont enregistrées de façon immuable.</p></div></div>
-          <div class="flex items-start gap-3"><i data-lucide="check-circle-2" class="w-6 h-6 text-[--accent] mt-1"></i><div><strong>Historique immuable et vérifiable</strong><p class="text-gray-600">Chaque cotisation est horodatée et vérifiable sur Polygonscan.</p></div></div>
-          <div class="flex items-start gap-3"><i data-lucide="check-circle-2" class="w-6 h-6 text-[--accent] mt-1"></i><div><strong>Aucun frais caché</strong><p class="text-gray-600">Vous cotisez exactement le montant convenu, sans surprise.</p></div></div>
-          <div class="flex items-start gap-3"><i data-lucide="check-circle-2" class="w-6 h-6 text-[--accent] mt-1"></i><div><strong>Conçu pour le marché béninois</strong><p class="text-gray-600">Interfaces en français, Mobile Money local, adapté aux pratiques locales.</p></div></div>
-        </div>
-      </div>
-    </section>
+        <!-- Stats -->
+        <section class="py-12 bg-gray-50 border-y border-gray-100">
+            <div class="max-w-6xl mx-auto px-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div>
+                    <p class="text-3xl font-extrabold text-primary mb-1">0 XOF</p>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Frais de gestion</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-extrabold text-primary mb-1">100%</p>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Transparent</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-extrabold text-primary mb-1">Polygon</p>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Réseau Blockchain</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-extrabold text-primary mb-1">FedaPay</p>
+                    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Partenaire Paiement</p>
+                </div>
+            </div>
+        </section>
 
-    <!-- Témoignages -->
-    <section class="py-16 px-6 max-w-6xl mx-auto">
-      <h2 class="text-3xl font-bold text-center mb-12">Ils nous font confiance</h2>
-      <div class="grid md:grid-cols-3 gap-8">
-        <div class="p-6 border rounded-xl text-center">
-          <div class="w-12 h-12 rounded-full bg-[--primary] text-white flex items-center justify-center mx-auto mb-3 font-bold">AD</div>
-          <p class="italic text-gray-600 mb-2">"Avec Tontine Chain, je sais exactement qui a payé. Plus de disputes !"</p>
-          <strong>Aminatou D.</strong><br><span class="text-sm text-gray-500">Cotonou</span>
-        </div>
-        <div class="p-6 border rounded-xl text-center">
-          <div class="w-12 h-12 rounded-full bg-[--primary] text-white flex items-center justify-center mx-auto mb-3 font-bold">KA</div>
-          <p class="italic text-gray-600 mb-2">"J'ai créé ma tontine en 5 minutes. Simple et efficace."</p>
-          <strong>Koffi A.</strong><br><span class="text-sm text-gray-500">Porto-Novo</span>
-        </div>
-        <div class="p-6 border rounded-xl text-center">
-          <div class="w-12 h-12 rounded-full bg-[--primary] text-white flex items-center justify-center mx-auto mb-3 font-bold">MG</div>
-          <p class="italic text-gray-600 mb-2">"La transparence de la blockchain me rassure énormément."</p>
-          <strong>Mariam G.</strong><br><span class="text-sm text-gray-500">Parakou</span>
-        </div>
-      </div>
-    </section>
-  </main>
+        <!-- Features -->
+        <section id="features" class="py-24 px-8 md:px-20 max-w-7xl mx-auto">
+            <div class="text-center mb-20">
+                <h2 class="text-4xl font-extrabold text-primary mb-4">Pourquoi choisir Tontine Chain ?</h2>
+                <p class="text-gray-500 max-w-2xl mx-auto">Une technologie de pointe pour une tradition ancestrale. La sécurité de la blockchain au service de votre communauté.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-10">
+                <div class="premium-card p-10">
+                    <div class="bg-blue-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-8 text-blue-600">
+                        <i data-lucide="shield-check" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Sécurité Maximale</h3>
+                    <p class="text-gray-600 leading-relaxed">Vos fonds sont verrouillés dans des Smart Contracts audités. Personne ne peut détourner l'argent de la communauté.</p>
+                </div>
+                <div class="premium-card p-10">
+                    <div class="bg-green-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-8 text-green-600">
+                        <i data-lucide="smartphone" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Paiements Locaux</h3>
+                    <p class="text-gray-600 leading-relaxed">Cotisez directement via MTN Mobile Money ou Moov Money. Pas besoin de cryptomonnaie complexe au quotidien.</p>
+                </div>
+                <div class="premium-card p-10">
+                    <div class="bg-amber-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-8 text-amber-600">
+                        <i data-lucide="trending-up" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Scoring de Crédit</h3>
+                    <p class="text-gray-600 leading-relaxed">Bâtissez votre réputation on-chain. Chaque paiement réussi augmente votre score de fiabilité pour de futurs projets.</p>
+                </div>
+            </div>
+        </section>
 
-  <footer class="bg-[--primary] text-white py-8 px-6 text-center text-sm">
-    <div class="flex flex-wrap justify-center gap-6 mb-4">
-      <a href="#" class="hover:underline">À propos</a>
-      <a href="#" class="hover:underline">Contact</a>
-      <a href="#" class="hover:underline">CGU</a>
-    </div>
-    <p class="text-white/70">© 2026 Tontine Chain — Tous droits réservés.</p>
-  </footer>
+        <!-- CTA -->
+        <section class="py-24 px-8 md:px-20 bg-gray-900 text-white">
+            <div class="max-w-4xl mx-auto text-center">
+                <h2 class="text-4xl font-extrabold mb-8">Prêt à révolutionner votre épargne ?</h2>
+                <p class="text-xl text-gray-400 mb-12">Rejoignez des milliers de béninois qui font confiance à la blockchain pour leur tontine.</p>
+                <a href="inscription.html" class="btn-primary px-12 py-5 text-xl">Démarrer ma première tontine</a>
+            </div>
+        </section>
+    </main>
 
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script>lucide.createIcons();</script>
+    <footer class="bg-white border-t border-gray-100 py-16 px-8 md:px-20 text-center">
+        <div class="flex items-center justify-center gap-3 mb-8">
+            <div class="bg-primary p-2 rounded-xl">
+                <i data-lucide="layers" class="w-5 h-5 text-white"></i>
+            </div>
+            <span class="font-bold text-xl text-primary">Tontine Chain</span>
+        </div>
+        <p class="text-gray-500 text-sm mb-8">© 2026 Tontine Chain — Produit conçu pour le MIABE Hackathon. Tous droits réservés.</p>
+        <div class="flex justify-center gap-8 text-gray-400 font-semibold text-sm">
+            <a href="#" class="hover:text-primary transition">Confidentialité</a>
+            <a href="#" class="hover:text-primary transition">CGU</a>
+            <a href="#" class="hover:text-primary transition">Support</a>
+        </div>
+    </footer>
+
+    <script>lucide.createIcons();</script>
 </body>
 </html>

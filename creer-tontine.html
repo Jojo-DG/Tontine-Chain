@@ -13,65 +13,90 @@
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/utils.js"></script>
-  <script src="assets/js/layout.js"></script>
+  <script src="assets/js/layout.js" defer></script>
 </head>
-<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
-  <main class="p-6 max-w-2xl mx-auto">
-    <h1 class="text-2xl font-bold mb-6">Créer une tontine</h1>
+<body class="bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-3xl mx-auto space-y-6">
+    <div>
+      <h1 class="page-title">Créer une tontine</h1>
+      <p class="page-subtitle">Définissez les règles une seule fois : la plateforme gère ensuite les inscriptions et les cycles automatiquement.</p>
+    </div>
 
-    <div class="bg-white rounded-xl shadow p-6 mb-6">
-      <h2 class="font-semibold text-lg mb-4">Paramètres</h2>
-      <form id="create-form" class="space-y-4">
-        <!-- Champs existants : nom, montant, fréquence, max membres, date début -->
+    <div class="form-card p-8">
+      <div class="mb-6">
+        <h2 class="form-section-title">Paramètres principaux</h2>
+        <p class="help">Ces informations sont visibles par les membres. Choisissez un nom clair et une fréquence adaptée à votre groupe.</p>
+      </div>
+
+      <form id="create-form" class="space-y-5">
         <div>
-          <label class="block text-sm font-medium mb-1">Nom de la tontine</label>
-          <input type="text" id="name" required class="w-full border rounded-lg px-3 py-2">
+          <label class="label" for="name">Nom de la tontine</label>
+          <input type="text" id="name" required class="input" placeholder="Ex : Tontine Famille Aïssi">
+          <p class="help">Un nom simple aide les membres à la reconnaître.</p>
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Montant de la part (XOF)</label>
-          <input type="number" id="amount" min="1000" required class="w-full border rounded-lg px-3 py-2">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Fréquence</label>
-          <select id="frequency" class="w-full border rounded-lg px-3 py-2">
-            <option value="WEEKLY">Hebdomadaire</option>
-            <option value="BIWEEKLY">Bi-mensuelle</option>
-            <option value="MONTHLY">Mensuelle</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Nombre de membres max</label>
-          <input type="number" id="max_members" min="2" max="50" required class="w-full border rounded-lg px-3 py-2">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Date de début</label>
-          <input type="date" id="start_date" required class="w-full border rounded-lg px-3 py-2">
-               <button type="button" id="toggle-rules" class="text-[--accent] text-sm font-medium">+ Règles optionnelles</button>
-        <div id="optional-rules" class="hidden space-y-4">
+
+        <div class="grid md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium mb-1">Absences max autorisées</label>
-            <input type="number" id="max_absences" value="1" min="0" class="w-full border rounded-lg px-3 py-2">
+            <label class="label" for="amount">Montant de la part (XOF)</label>
+            <input type="number" id="amount" min="1000" required class="input" placeholder="Ex : 5000">
+            <p class="help">Montant demandé à chaque membre à chaque cycle.</p>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Pénalité retard (XOF)</label>
-            <input type="number" id="penalty" value="1000" min="0" class="w-full border rounded-lg px-3 py-2">
+            <label class="label" for="max_members">Nombre de membres max</label>
+            <input type="number" id="max_members" min="2" max="50" required class="input" placeholder="Ex : 10">
+            <p class="help">Minimum recommandé : 5 membres.</p>
           </div>
         </div>
 
-        <button type="submit" id="submit-btn" class="btn-primary w-full py-2.5">Créer la tontine</button>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <label class="label" for="frequency">Fréquence</label>
+            <select id="frequency" class="select">
+              <option value="WEEKLY">Hebdomadaire</option>
+              <option value="BIWEEKLY">Bi-mensuelle</option>
+              <option value="MONTHLY">Mensuelle</option>
+            </select>
+            <p class="help">Définit la durée entre deux cotisations.</p>
+          </div>
+          <div>
+            <label class="label" for="start_date">Date de début</label>
+            <input type="date" id="start_date" required class="input">
+            <p class="help">La première échéance sera calculée à partir de cette date.</p>
+          </div>
+        </div>
+
+        <div>
+          <button type="button" id="toggle-rules" class="btn-link">+ Règles optionnelles</button>
+          <div id="optional-rules" class="hidden space-y-4 mt-4">
+            <div>
+              <label class="label" for="max_absences">Absences max autorisées</label>
+              <input type="number" id="max_absences" value="1" min="0" class="input">
+              <p class="help">Nombre d’échéances manquées tolérées avant sanctions.</p>
+            </div>
+            <div>
+              <label class="label" for="penalty">Pénalité de retard (XOF)</label>
+              <input type="number" id="penalty" value="1000" min="0" class="input">
+              <p class="help">Montant ajouté en cas de paiement en retard.</p>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn-primary" style="width:100%;padding-top:14px;padding-bottom:14px;">
+          Créer la tontine
+        </button>
       </form>
     </div>
 
     <!-- Modal succès -->
     <div id="success-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div class="bg-white rounded-xl p-6 max-w-md w-full text-center">
+      <div class="form-card p-8 max-w-md w-full text-center animate-fade-up">
         <i data-lucide="check-circle-2" class="w-12 h-12 text-[--accent] mx-auto mb-4"></i>
         <h3 class="text-xl font-bold mb-2">Tontine créée !</h3>
         <p class="mb-2">ID de la tontine : <strong id="tontine-id" class="text-sm break-all"></strong></p>
         <p class="mb-2">Code d'invitation : <strong id="invite-code" class="text-lg tracking-wider"></strong></p>
         <p class="text-sm text-gray-500 mb-4">Partagez l'ID et le code pour inviter des membres.</p>
-        <button id="open-btn" class="btn-primary w-full mb-2">Ouvrer aux inscriptions</button>
-        <a href="dashboard-admin.html" class="btn-outline w-full block text-center">Retour au tableau de bord</a>
+        <button id="open-btn" class="btn-primary" style="width:100%;margin-bottom:10px;">Ouvrir les inscriptions</button>
+        <a href="dashboard-admin.html" class="btn-outline" style="width:100%;display:block;text-align:center;">Retour au tableau de bord</a>
       </div>
     </div>
   </main>

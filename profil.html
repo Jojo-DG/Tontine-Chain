@@ -14,20 +14,28 @@
   <script src="assets/js/api.js"></script>
   <script src="assets/js/utils.js"></script>
   <script src="assets/js/blockchain.js"></script>
-  <script src="assets/js/layout.js"></script>
+  <script src="assets/js/layout.js" defer></script>
 </head>
-<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
-  <main class="p-6 max-w-4xl mx-auto space-y-6">
+<body class="bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-5xl mx-auto space-y-6">
+    <div>
+      <h1 class="page-title">Mon profil</h1>
+      <p class="page-subtitle">Consultez vos informations et votre score de fiabilité. Gardez vos données à jour pour éviter les blocages.</p>
+    </div>
+
     <div id="loading">
       <div class="skeleton h-40 rounded-xl mb-4"></div>
       <div class="skeleton h-40 rounded-xl"></div>
     </div>
     <div id="content" class="hidden space-y-6">
       <!-- Carte profil -->
-      <div class="bg-white rounded-xl p-6">
+      <div class="form-card p-8">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold">Informations personnelles</h2>
-          <button id="edit-profile-btn" class="btn-outline text-sm">Modifier</button>
+          <div>
+            <h2 class="form-section-title">Informations personnelles</h2>
+            <p class="help">Votre wallet est utilisé pour les preuves sur Polygon.</p>
+          </div>
+          <button id="edit-profile-btn" class="btn-outline btn-sm">Modifier</button>
         </div>
         <div id="profile-view" class="space-y-2">
           <p><span class="text-gray-500">Nom complet :</span> <strong id="p-name">—</strong></p>
@@ -37,18 +45,25 @@
           <p><span class="text-gray-500">Wallet :</span> <strong id="p-wallet" class="font-mono">—</strong> <a id="p-polygon-link" href="#" target="_blank" class="text-[--accent] text-xs">Polygonscan</a></p>
         </div>
         <form id="profile-edit-form" class="hidden space-y-3 mt-3">
-          <input type="text" id="edit-fullname" class="w-full border rounded-lg px-3 py-2" placeholder="Nom complet">
-          <input type="email" id="edit-email" class="w-full border rounded-lg px-3 py-2" placeholder="Email">
+          <div>
+            <label class="label" for="edit-fullname">Nom complet</label>
+            <input type="text" id="edit-fullname" class="input" placeholder="Nom complet">
+          </div>
+          <div>
+            <label class="label" for="edit-email">Email</label>
+            <input type="email" id="edit-email" class="input" placeholder="email@exemple.com">
+          </div>
           <div class="flex gap-2">
-            <button type="submit" class="btn-primary">Enregistrer</button>
-            <button type="button" id="cancel-edit-btn" class="btn-outline">Annuler</button>
+            <button type="submit" class="btn-primary btn-sm">Enregistrer</button>
+            <button type="button" id="cancel-edit-btn" class="btn-outline btn-sm">Annuler</button>
           </div>
         </form>
       </div>
 
       <!-- Score -->
-      <div class="bg-white rounded-xl p-6" id="score-section">
-        <h3 class="font-semibold mb-2">Score de fiabilité</h3>
+      <div class="form-card p-8" id="score-section">
+        <h3 class="form-section-title">Score de fiabilité</h3>
+        <p class="help">Plus votre score est élevé, plus vous êtes considéré comme fiable (paiements à temps, participation régulière, etc.).</p>
         <div class="flex items-center gap-4" id="score-display">
           <span class="text-4xl font-bold" id="score-num">—</span>
           <span class="badge badge-success" id="score-level">—</span>

@@ -14,10 +14,21 @@
   <script src="assets/js/api.js"></script>
   <script src="assets/js/utils.js"></script>
   <script src="assets/js/blockchain.js"></script>
-  <script src="assets/js/layout.js"></script>
+  <script src="assets/js/layout.js" defer></script>
 </head>
-<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
-  <main class="p-6 max-w-6xl mx-auto">
+<body class="bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-6xl mx-auto space-y-6">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <h1 class="page-title" id="tontine-title">Détail de la tontine</h1>
+        <p class="page-subtitle" id="tontine-subtitle">Suivez la cagnotte, les membres, l’échéance et les preuves blockchain.</p>
+      </div>
+      <a href="historique.html" class="btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:10px;">
+        <i data-lucide="activity" class="w-5 h-5"></i>
+        Historique
+      </a>
+    </div>
+
     <div id="loading" class="grid grid-cols-4 gap-4 mb-6">
       <div class="skeleton h-24 rounded-xl"></div>
       <div class="skeleton h-24 rounded-xl"></div>
@@ -44,21 +55,29 @@
       </div>
 
       <!-- Membres -->
-      <div class="bg-white rounded-xl p-6 overflow-x-auto">
+      <div class="table-card">
+        <div style="padding:18px 18px 0;">
         <h3 class="font-semibold mb-4">Membres</h3>
-        <table class="w-full text-sm">
-          <thead><tr class="text-left text-gray-500"><th>Ordre</th><th>Nom</th><th>Score</th><th>Rôle</th><th>Statut</th><th>Action</th></tr></thead>
+        </div>
+        <div style="overflow:auto;">
+        <table class="app-table">
+          <thead><tr><th>Ordre</th><th>Nom</th><th>Score</th><th>Rôle</th><th>Statut</th><th>Action</th></tr></thead>
           <tbody id="members-tbody"></tbody>
         </table>
+        </div>
       </div>
 
       <!-- Historique cycles -->
-      <div class="bg-white rounded-xl p-6 overflow-x-auto">
+      <div class="table-card">
+        <div style="padding:18px 18px 0;">
         <h3 class="font-semibold mb-4">Historique des cycles</h3>
-        <table class="w-full text-sm">
-          <thead><tr class="text-left text-gray-500"><th>Cycle</th><th>Bénéficiaire</th><th>Montant distribué</th><th>Date</th><th>Statut</th><th></th></tr></thead>
+        </div>
+        <div style="overflow:auto;">
+        <table class="app-table">
+          <thead><tr><th>Cycle</th><th>Bénéficiaire</th><th>Montant distribué</th><th>Date</th><th>Statut</th><th></th></tr></thead>
           <tbody id="cycles-tbody"></tbody>
         </table>
+        </div>
       </div>
 
       <!-- Preuve blockchain -->
@@ -83,6 +102,7 @@
           apiFetch(`/tontines/${tontineId}/members`)
         ]);
         const t = tontineRes.data;
+        document.getElementById('tontine-title').textContent = t?.name ? t.name : 'Détail de la tontine';
         renderKPI(t);
         renderProgress(t);
         renderBeneficiary(t);

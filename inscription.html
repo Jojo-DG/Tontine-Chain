@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inscription — Tontine Chain</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="assets/css/style.css">
   <script src="assets/js/config.js"></script>
@@ -13,63 +13,97 @@
   <script src="assets/js/api.js"></script>
   <script src="assets/js/utils.js"></script>
 </head>
-<body class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-  <div class="max-w-lg w-full">
+<body class="auth-bg">
+  <div class="auth-shell">
+  <div class="auth-wrap animate-fade-up">
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center justify-center gap-3 mb-5">
+        <div class="app-brand__mark" style="background:var(--accent)">
+          <i data-lucide="layers" class="w-6 h-6 text-white"></i>
+        </div>
+      </div>
+      <h1 class="auth-title">Créer un compte</h1>
+      <p class="auth-subtitle">Choisissez votre profil puis sécurisez votre espace.</p>
+    </div>
+
     <!-- Step indicator -->
     <div id="step-indicator" class="flex justify-center mb-8">
-      <div class="flex items-center gap-2 text-sm font-medium">
-        <span id="step1-dot" class="w-8 h-8 rounded-full flex items-center justify-center bg-[--accent] text-white">1</span>
-        <span class="text-gray-400">—</span>
-        <span id="step2-dot" class="w-8 h-8 rounded-full flex items-center justify-center border border-gray-300 text-gray-500">2</span>
+      <div class="stepper" aria-label="Étapes d'inscription">
+        <span id="step1-dot" class="step-dot is-active">1</span>
+        <span class="step-sep">—</span>
+        <span id="step2-dot" class="step-dot">2</span>
       </div>
     </div>
 
     <!-- Step 1: Role selection -->
-    <div id="step1" class="card bg-white rounded-xl shadow p-8">
-      <h1 class="text-2xl font-bold text-center mb-6">Quel est votre profil ?</h1>
-      <div class="grid grid-cols-2 gap-4">
-        <div class="border-2 border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-[--accent] transition" id="role-member">
-          <i data-lucide="users" class="w-10 h-10 text-[--accent] mx-auto mb-2"></i>
-          <strong class="block">Membre</strong>
-          <span class="text-sm text-gray-500">Je veux rejoindre une tontine</span>
-        </div>
-        <div class="border-2 border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-[--accent] transition" id="role-organizer">
-          <i data-lucide="crown" class="w-10 h-10 text-[--accent] mx-auto mb-2"></i>
-          <strong class="block">Organisateur</strong>
-          <span class="text-sm text-gray-500">Je veux créer et gérer ma tontine</span>
-        </div>
+    <div id="step1" class="glass-card p-10">
+      <h2 class="text-2xl font-extrabold text-primary text-center mb-2">Quel est votre profil ?</h2>
+      <p class="text-center text-gray-600 mb-8" style="font-weight:650;">Cela personnalise votre tableau de bord (vous pourrez changer plus tard).</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <button type="button" class="premium-card p-6 text-left" id="role-member">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(16,185,129,0.10);display:grid;place-items:center;color:var(--accent);">
+              <i data-lucide="users" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <strong style="display:block;font-size:16px;">Membre</strong>
+              <span class="text-muted" style="font-size:13px;font-weight:650;">Rejoindre une tontine avec un code</span>
+            </div>
+          </div>
+          <p class="help" style="margin:0;">Recevez des rappels, payez vos cotisations et suivez votre score.</p>
+        </button>
+
+        <button type="button" class="premium-card p-6 text-left" id="role-organizer">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+            <div style="width:44px;height:44px;border-radius:14px;background:rgba(16,185,129,0.10);display:grid;place-items:center;color:var(--accent);">
+              <i data-lucide="crown" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <strong style="display:block;font-size:16px;">Organisateur</strong>
+              <span class="text-muted" style="font-size:13px;font-weight:650;">Créer et gérer une tontine</span>
+            </div>
+          </div>
+          <p class="help" style="margin:0;">Ouvrez les inscriptions, suivez les cycles et la distribution.</p>
+        </button>
       </div>
-      <p class="text-center text-sm text-gray-500 mt-6">Vous pourrez changer de rôle plus tard.</p>
     </div>
 
     <!-- Step 2: Registration form -->
-    <div id="step2" class="card bg-white rounded-xl shadow p-8 hidden">
-      <h1 class="text-2xl font-bold text-center mb-6">Créer un compte</h1>
-      <form id="register-form" class="space-y-4">
+    <div id="step2" class="glass-card p-10 hidden">
+      <h2 class="text-2xl font-extrabold text-primary text-center mb-2">Créer un compte</h2>
+      <p class="text-center text-gray-600 mb-8" style="font-weight:650;">Un code OTP vous sera envoyé pour valider votre numéro.</p>
+
+      <form id="register-form" class="space-y-5">
         <div>
-          <label class="block text-sm font-medium mb-1">Nom complet</label>
-          <input type="text" id="full_name" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[--accent] outline-none">
+          <label class="label" for="full_name">Nom complet</label>
+          <input type="text" id="full_name" required class="input" placeholder="Ex : Aïssi K." />
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">Téléphone</label>
-          <input type="tel" id="phone" placeholder="+229 XX XX XX XX" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[--accent] outline-none">
+          <label class="label" for="phone">Téléphone</label>
+          <input type="tel" id="phone" placeholder="+229 XX XX XX XX" required class="input" />
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">Mot de passe</label>
-          <input type="password" id="password" required minlength="8" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[--accent] outline-none">
-          <p class="text-xs text-gray-500 mt-1">8 caractères min, 1 majuscule, 1 chiffre, 1 spécial</p>
+          <label class="label" for="password">Mot de passe</label>
+          <input type="password" id="password" required minlength="8" class="input" />
+          <p class="help">8 caractères min, 1 majuscule, 1 chiffre, 1 spécial.</p>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">Confirmer le mot de passe</label>
-          <input type="password" id="confirm_password" required class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-[--accent] outline-none">
+          <label class="label" for="confirm_password">Confirmer le mot de passe</label>
+          <input type="password" id="confirm_password" required class="input" />
         </div>
-        <button type="submit" id="register-btn" class="btn-primary w-full py-2.5">Créer mon compte</button>
+
+        <button type="submit" id="register-btn" class="btn-primary" style="width:100%;padding-top:14px;padding-bottom:14px;">Créer mon compte</button>
       </form>
-      <p class="text-center text-sm mt-4">Déjà un compte ? <a href="connexion.html" class="text-[--accent] font-medium">Se connecter</a></p>
+
+      <p class="text-center" style="margin-top:16px;color:rgba(191,219,254,0.85);font-weight:700;">
+        Déjà un compte ? <a href="connexion.html" class="btn-link" style="color:white;">Se connecter</a>
+      </p>
     </div>
+  </div>
   </div>
 
   <script>
+    lucide.createIcons();
     let selectedRole = null;
     const step1 = document.getElementById('step1');
     const step2 = document.getElementById('step2');
@@ -82,8 +116,8 @@
     function showStep2() {
       step1.classList.add('hidden');
       step2.classList.remove('hidden');
-      step1Dot.className = 'w-8 h-8 rounded-full flex items-center justify-center border border-gray-300 text-gray-500';
-      step2Dot.className = 'w-8 h-8 rounded-full flex items-center justify-center bg-[--accent] text-white';
+      step1Dot.classList.remove('is-active');
+      step2Dot.classList.add('is-active');
     }
 
     document.getElementById('register-form').addEventListener('submit', async (e) => {

@@ -13,13 +13,19 @@
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/js/utils.js"></script>
-  <script src="assets/js/layout.js"></script>
+  <script src="assets/js/layout.js" defer></script>
 </head>
-<body class="pt-16 md:pl-64 bg-gray-50 min-h-screen">
-  <main class="p-6 max-w-6xl mx-auto">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold">Gestion des tontines</h1>
-      <a href="creer-tontine.html" class="btn-primary flex items-center gap-2"><i data-lucide="plus" class="w-5 h-5"></i> Créer une tontine</a>
+<body class="bg-gray-50 min-h-screen">
+  <main class="p-6 max-w-6xl mx-auto space-y-6">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <h1 class="page-title">Gestion des tontines</h1>
+        <p class="page-subtitle">Créez, ouvrez les inscriptions, et suivez l’avancement des cotisations en temps réel.</p>
+      </div>
+      <a href="creer-tontine.html" class="btn-primary btn-sm" style="display:inline-flex;align-items:center;gap:10px;">
+        <i data-lucide="plus" class="w-5 h-5"></i>
+        Créer une tontine
+      </a>
     </div>
 
     <div id="tontines-container">
@@ -31,8 +37,8 @@
     </div>
     <div id="empty-state" class="hidden text-center py-16">
       <i data-lucide="circle-off" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
-      <p class="text-gray-500 mb-4">Créez votre première tontine</p>
-      <a href="creer-tontine.html" class="btn-primary">Créer une tontine</a>
+      <p class="text-gray-500 mb-4">Aucune tontine pour le moment. Commencez par créer un groupe et partager un code d’invitation.</p>
+      <a href="creer-tontine.html" class="btn-primary btn-sm">Créer une tontine</a>
     </div>
   </main>
 
@@ -60,7 +66,7 @@
       const grid = container.querySelector('.grid');
       tontines.forEach(tontine => {
         const card = document.createElement('div');
-        card.className = 'bg-white rounded-xl p-6 shadow-sm';
+        card.className = 'premium-card p-8';
         const statusClass = statusBadgeClass(tontine.status);
         card.innerHTML = `
           <div class="flex justify-between items-start mb-3">
@@ -74,7 +80,7 @@
             <div><span class="text-gray-500">Prochaine échéance :</span> ${tontine.current_cycle?.deadline ? countdown(tontine.current_cycle.deadline) : '—'}</div>
           </div>
           <div class="bg-gray-200 rounded-full h-2 mb-4">
-            <div class="bg-[--accent] h-2 rounded-full" style="width:${progressPercent(tontine)}%"></div>
+            <div class="bg-accent h-2 rounded-full" style="width:${progressPercent(tontine)}%"></div>
           </div>
           <p class="text-sm text-gray-600 mb-3">Bénéficiaire : <strong>${tontine.current_cycle?.beneficiary?.full_name || '—'}</strong></p>
           ${tontine.penalty_total > 0 ? `<p class="text-sm text-red-600 mb-3 flex items-center gap-1"><i data-lucide="alert-circle" class="w-4 h-4"></i> Pénalités collectées : ${formatMontant(tontine.penalty_total)}</p>` : ''}
@@ -102,14 +108,14 @@
 
     function actionButtons(t) {
       if (t.status === 'DRAFT') {
-        return `<button class="btn-outline text-sm" onclick="openTontine('${t.id}')">Ouvrir aux inscriptions</button>`;
+        return `<button class="btn-outline btn-sm" onclick="openTontine('${t.id}')">Ouvrir aux inscriptions</button>`;
       }
       if (t.status === 'OPEN') {
-        return `<button class="btn-primary text-sm" onclick="startTontine('${t.id}')" ${t.members_confirmed < 2 ? 'disabled title="Minimum 2 membres confirmés"' : ''}>Démarrer la tontine</button>
-                <span class="text-xs text-gray-500 self-center">Code : ${t.invitation_code || '—'}</span>`;
+        return `<button class="btn-primary btn-sm" onclick="startTontine('${t.id}')" ${t.members_confirmed < 2 ? 'disabled title="Minimum 2 membres confirmés"' : ''}>Démarrer la tontine</button>
+                <span class="text-xs text-gray-500 self-center" style="font-weight:700;">Code : <strong>${t.invitation_code || '—'}</strong></span>`;
       }
       if (t.status === 'ACTIVE') {
-        return `<a href="tontine.html?id=${t.id}" class="btn-outline text-sm">Voir le détail</a>`;
+        return `<a href="tontine.html?id=${t.id}" class="btn-outline btn-sm">Voir le détail</a>`;
       }
       return '';
     }
