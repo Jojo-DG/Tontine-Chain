@@ -12,6 +12,44 @@ var accessToken = localStorage.getItem('tontine_access_token');
 var refreshToken = localStorage.getItem('tontine_refresh_token');
 var currentUser = safeJsonParse(localStorage.getItem('tontine_user') || 'null', null);
 
+function setCurrentUser(user) {
+  currentUser = user || null;
+  localStorage.setItem('tontine_user', JSON.stringify(currentUser));
+  document.querySelector('meta[name="user-role"]')?.setAttribute('content', currentUser?.role || 'USER');
+  return currentUser;
+}
+
+function updateCurrentUser(partial) {
+  if (!partial) return currentUser;
+  const next = { ...(currentUser || {}), ...partial };
+  return setCurrentUser(next);
+}
+
+async function fetchMe() {
+  if (!accessToken) return null;
+  const res = await fetch(`${CONFIG.API_BASE_URL}/users/me`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`
+    }
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    let msg = data.message || 'Erreur inattendue';
+    if (Array.isArray(msg)) msg = msg[0];
+    throw { code: data.error || 'UNAUTHORIZED', message: msg, status: res.status };
+  }
+  const payload = data.data || data;
+  return setCurrentUser(payload);
+}
+
+async function ensureUser() {
+  if (currentUser && currentUser.id) return currentUser;
+  return await fetchMe();
+}
+
 async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -35,13 +73,11 @@ async function login(phone, password) {
   
   accessToken = payload.access_token;
   refreshToken = payload.refresh_token;
-  currentUser = payload.user;
+  setCurrentUser(payload.user);
   
   localStorage.setItem('tontine_access_token', accessToken);
   localStorage.setItem('tontine_refresh_token', refreshToken);
-  localStorage.setItem('tontine_user', JSON.stringify(currentUser));
   
-  document.querySelector('meta[name="user-role"]')?.setAttribute('content', currentUser?.role || 'USER');
   return payload;
 }
 
@@ -88,7 +124,7 @@ async function logout() {
   
   accessToken = null;
   refreshToken = null;
-  currentUser = null;
+  setCurrentUser(null);
   localStorage.removeItem('tontine_access_token');
   localStorage.removeItem('tontine_refresh_token');
   localStorage.removeItem('tontine_user');

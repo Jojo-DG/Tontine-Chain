@@ -16,17 +16,19 @@ async function apiFetch(endpoint, options = {}) {
 
     // 401 : Session expirée ou non autorisée
     if (response.status === 401) {
-      if (typeof refreshAccessToken === 'function' && !options._isRetry) {
+      const canRefresh = typeof refreshAccessToken === 'function'
+        && typeof refreshToken !== 'undefined'
+        && !!refreshToken;
+
+      if (canRefresh && !options._isRetry) {
         try {
           await refreshAccessToken();
           return apiFetch(endpoint, { ...options, _isRetry: true });
         } catch (e) {
-          logout();
-          throw { code: 'SESSION_EXPIRED', message: 'Votre session a expiré. Veuillez vous reconnecter.' };
+          throw { code: 'SESSION_EXPIRED', message: 'Votre session a expiré. Veuillez vous reconnecter.', status: 401 };
         }
       } else {
-        logout();
-        throw { code: 'UNAUTHORIZED', message: 'Veuillez vous connecter pour accéder à cette page.' };
+        throw { code: canRefresh ? 'SESSION_EXPIRED' : 'UNAUTHORIZED', message: 'Veuillez vous connecter pour accéder à cette page.', status: 401 };
       }
     }
 
