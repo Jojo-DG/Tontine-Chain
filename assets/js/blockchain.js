@@ -2,7 +2,7 @@ let provider;
 
 function initBlockchainProvider() {
   if (!provider) {
-    provider = new ethers.providers.JsonRpcProvider(CONFIG.POLYGON_RPC);
+    provider = new ethers.JsonRpcProvider(CONFIG.POLYGON_RPC);
   }
   return provider;
 }
@@ -13,7 +13,7 @@ async function getTontineOnchain(contractAddress, abi) {
   // Appel de la fonction totalContributions() selon l'ABI fournie
   try {
     const total = await contract.totalContributions();
-    return { total_contributions_onchain: ethers.utils.formatEther(total) };
+    return { total_contributions_onchain: ethers.formatEther(total) };
   } catch (e) {
     console.error('Blockchain read error', e);
     return null;

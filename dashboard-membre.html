@@ -115,17 +115,20 @@
                     document.getElementById('welcome-message').textContent = `Bonjour, ${user.full_name.split(' ')[0]} 👋`;
                 }
 
-                const [tontinesRes, walletRes] = await Promise.all([
+                const [tontinesRes, walletRes, scoreRes] = await Promise.all([
                     apiFetch('/tontines'),
-                    apiFetch('/wallets/balance').catch(() => ({ data: { balance_matic: 0 } }))
+                    apiFetch('/wallets/balance').catch(() => ({ data: { balance_matic: 0 } })),
+                    apiFetch(`/users/${user.id}/score`).catch(() => ({ data: { score: 0 } }))
                 ]);
 
                 const tontines = tontinesRes.data || [];
                 const wallet = walletRes.data || { balance_matic: 0 };
+                const score = scoreRes.data || { score: 0 };
                 
                 document.getElementById('stat-balance').textContent = `${parseFloat(wallet.balance_matic).toFixed(3)}`;
                 document.getElementById('stat-total').textContent = tontines.length;
                 document.getElementById('stat-pending').textContent = tontines.filter(t => t.my_contribution_status === 'PENDING').length;
+                document.getElementById('stat-score').textContent = `${score.score}/1000`;
                 
                 loading.classList.add('hidden');
                 
