@@ -106,6 +106,7 @@ async function refreshAccessToken() {
   
   accessToken = payload.access_token;
   refreshToken = payload.refresh_token;
+  if (payload.user) setCurrentUser(payload.user);
   
   localStorage.setItem('tontine_access_token', accessToken);
   localStorage.setItem('tontine_refresh_token', refreshToken);
