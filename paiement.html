@@ -20,14 +20,14 @@
   <main class="p-6 max-w-2xl mx-auto space-y-6">
     <div>
       <h1 class="page-title">Paiement</h1>
-      <p class="page-subtitle">Réglez votre cotisation en quelques secondes via Mobile Money. Vous pourrez ensuite vérifier la confirmation.</p>
+      <p class="page-subtitle">Réglez votre cotisation via Mobile Money. Vous pourrez ensuite vérifier la confirmation.</p>
     </div>
 
     <div id="loading" class="skeleton h-64 rounded-xl"></div>
     <div id="content" class="hidden form-card p-8 space-y-6">
       <div>
         <h2 class="form-section-title">Payer ma cotisation</h2>
-        <p class="help">Vérifiez les informations du cycle ci-dessous, puis choisissez votre réseau Mobile Money.</p>
+        <p class="help">Vérifiez les informations du cycle ci-dessous, puis lancez le paiement.</p>
       </div>
 
       <div id="cycle-info" class="space-y-2">
@@ -40,31 +40,21 @@
         </div>
       </div>
 
-      <div class="grid md:grid-cols-2 gap-4">
-        <div>
-          <label class="label" for="mm-phone">Numéro Mobile Money</label>
-          <input type="tel" id="mm-phone" class="input" placeholder="+229 XX XX XX XX" value="">
-          <p class="help">Utilisez le même numéro que votre compte si possible.</p>
-        </div>
-        <div>
-          <label class="label" for="mm-network">Réseau Mobile Money</label>
-          <select id="mm-network" class="select">
-            <option value="MTN_MOMO">MTN Mobile Money</option>
-            <option value="MOOV_MONEY">Moov Money</option>
-          </select>
-          <p class="help">Le paiement s’ouvre dans un onglet CinetPay.</p>
-        </div>
+      <div>
+        <label class="label" for="mm-phone">Numéro Mobile Money</label>
+        <input type="tel" id="mm-phone" class="input" placeholder="+229 XX XX XX XX" value="">
+        <p class="help">Utilisez le même numéro que votre compte si possible. Le paiement s’ouvre dans un nouvel onglet.</p>
       </div>
 
       <div class="premium-card" style="padding:14px;border-radius:18px;background:rgba(16,185,129,0.06);border-color:rgba(16,185,129,0.18);">
         <p class="help" style="margin:0;">
           <i data-lucide="info" class="inline w-4 h-4" style="vertical-align:-2px;"></i>
-          Paiement via CinetPay (MTN MoMo / Moov Money). Après paiement, cliquez sur “Vérifier le statut” pour synchroniser.
+          Après paiement, cliquez sur “Vérifier le statut” pour synchroniser.
         </p>
       </div>
 
       <button id="pay-btn" class="btn-primary" style="width:100%;padding-top:14px;padding-bottom:14px;">
-        Payer <span id="pay-amount"></span> XOF via Mobile Money
+        Payer <span id="pay-amount"></span> XOF
       </button>
       <div id="payment-result" class="hidden"></div>
     </div>
@@ -75,10 +65,45 @@
     const cycleId = params.get('cycle_id');
     if (!cycleId) window.location.href = 'dashboard-membre.html';
 
-    (async () => {
+    function pickPaymentUrl(data) {
+      const d = data?.data || data || {};
+      return d.payment_url || d.checkout_url || d.url || d.redirect_url || d.invoice_url || null;
+    }
+
+    function inferProviderLabel(url) {
+      if (!url) return 'prestataire de paiement';
+      const u = String(url).toLowerCase();
+      if (u.includes('fedapay')) return 'FedaPay';
+      if (u.includes('cinetpay')) return 'CinetPay';
+      return 'prestataire de paiement';
+    }
+
+    async function loadCycleInfo(cycleId) {
+      // 1) Essayez l'endpoint direct
       try {
         const res = await apiFetch(`/cycles/${cycleId}`);
-        const cycle = res.data;
+        return res.data;
+      } catch (_) {
+        // 2) Fallback: trouver le cycle via /tontines (déjà utilisé ailleurs)
+        const res = await apiFetch('/tontines');
+        const tontines = res.data || [];
+        const found = tontines.find(t => t?.current_cycle?.id === cycleId);
+        if (!found) throw { code: 'NOT_FOUND', message: 'Cycle introuvable.' };
+        // Normaliser un shape proche
+        return {
+          tontine_name: found.name,
+          cycle_number: found.current_cycle?.cycle_number,
+          beneficiary: found.current_cycle?.beneficiary,
+          due_amount: found.contribution_amount,
+          deadline: found.current_cycle?.deadline,
+        };
+      }
+    }
+
+    (async () => {
+      try {
+        const user = await ensureUser().catch(() => null);
+        const cycle = await loadCycleInfo(cycleId);
         document.getElementById('loading').remove();
         document.getElementById('content').classList.remove('hidden');
         document.getElementById('t-name').textContent = cycle.tontine_name;
@@ -87,35 +112,71 @@
         document.getElementById('c-amount').textContent = formatMontant(cycle.due_amount);
         document.getElementById('c-deadline').textContent = formatDate(cycle.deadline);
         document.getElementById('pay-amount').textContent = formatMontant(cycle.due_amount).replace(' XOF','');
-        document.getElementById('mm-phone').value = getUser()?.phone || '';
-      } catch(e) { showToast(e.message, 'error'); }
+        document.getElementById('mm-phone').value = user?.phone || getUser()?.phone || '';
+        if (window.lucide) lucide.createIcons();
+      } catch(e) {
+        showToast(getFriendlyMessage(e), 'error');
+        if (e?.code === 'SESSION_EXPIRED' || e?.code === 'UNAUTHORIZED') {
+          setTimeout(() => { window.location.href = 'connexion.html'; }, 900);
+        }
+      }
     })();
 
     document.getElementById('pay-btn').addEventListener('click', async () => {
       const btn = document.getElementById('pay-btn');
       showSpinner(btn);
       const phone = document.getElementById('mm-phone').value.trim();
-      const network = document.getElementById('mm-network').value;
-      try {
-        const res = await apiFetch('/contributions/initiate', {
-          method: 'POST',
-          body: JSON.stringify({
-            cycle_id: cycleId,
-            payment_method: 'MOBILE_MONEY',
-            phone_number: phone,
-            network: network
-          })
-        });
+      if (!phone) {
         hideSpinner(btn, 'Payer');
+        showBanner(document.getElementById('content'), 'Veuillez renseigner votre numéro Mobile Money.', 'warning');
+        return;
+      }
+      try {
+        // Spec (doc API) : cycle_id + payment_method=MOBILE_MONEY + phone_number
+        // Fallbacks gardés pour compatibilité si le backend a évolué.
+        let res;
+        try {
+          res = await apiFetch('/contributions/initiate', {
+            method: 'POST',
+            body: JSON.stringify({
+              cycle_id: cycleId,
+              payment_method: 'MOBILE_MONEY',
+              phone_number: phone
+            })
+          });
+        } catch (e1) {
+          // Variante alternative (si backend attend un autre nom)
+          res = await apiFetch('/contributions/initiate', {
+            method: 'POST',
+            body: JSON.stringify({
+              cycle_id: cycleId,
+              payment_method: 'FEDAPAY',
+              phone_number: phone
+            })
+          });
+        }
+
+        hideSpinner(btn, 'Payer');
+        const paymentUrl = pickPaymentUrl(res);
+        if (!paymentUrl) {
+          showBanner(document.getElementById('content'), 'Le backend n\'a pas renvoyé de lien de paiement (FedaPay).', 'error');
+          return;
+        }
+
+        const providerLabel = inferProviderLabel(paymentUrl);
         const resultDiv = document.getElementById('payment-result');
         resultDiv.classList.remove('hidden');
         resultDiv.innerHTML = `
           <div class="bg-blue-50 p-4 rounded-lg">
-            <p class="font-medium">Redirection vers CinetPay...</p>
-            <a href="${res.data.payment_url}" target="_blank" class="btn-primary inline-block mt-2">Finaliser le paiement (CinetPay)</a>
+            <p class="font-medium">Redirection vers ${providerLabel}…</p>
+            <a href="${paymentUrl}" target="_blank" rel="noopener" class="btn-primary inline-block mt-2">Finaliser le paiement</a>
             <p class="text-xs text-gray-500 mt-1">Lien valide pendant 30 min</p>
             <button id="check-status-btn" class="btn-outline mt-3">Vérifier le statut</button>
           </div>`;
+
+        // Auto-open pour une UX plus fluide
+        window.open(paymentUrl, '_blank', 'noopener');
+
         document.getElementById('check-status-btn').addEventListener('click', async () => {
           try {
             const statusRes = await apiFetch(`/contributions/cycle/${cycleId}`);
@@ -127,7 +188,7 @@
       } catch (err) {
         hideSpinner(btn, 'Payer');
         if (err.code === 'CONTRIBUTION_ALREADY_PAID') showBanner(document.getElementById('content'), 'Déjà payé pour ce cycle', 'warning');
-        else showBanner(document.getElementById('content'), err.message, 'error');
+        else showBanner(document.getElementById('content'), getFriendlyMessage(err), 'error');
       }
     });
   </script>
