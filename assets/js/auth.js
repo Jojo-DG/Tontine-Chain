@@ -96,7 +96,10 @@ async function refreshAccessToken() {
   const res = await fetch(`${CONFIG.API_BASE_URL}/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refresh_token: refreshToken })
+    body: JSON.stringify({ 
+      refresh_token: refreshToken,
+      user_id: currentUser?.id
+    })
   });
   const data = await handleResponse(res);
   const payload = data.data || data;
